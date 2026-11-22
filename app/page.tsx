@@ -9,14 +9,14 @@ const API_NAME = "text_to_video";
 
 function findVideoUrl(value: unknown): string | null {
   if (!value) return null;
-  if (typeof value === "string") return /^https?:\\/\\//.test(value) ? value : null;
+  if (typeof value === "string") return (value.startsWith("https://") || value.startsWith("http://")) ? value : null;
   if (Array.isArray(value)) {
     for (const item of value) { const found = findVideoUrl(item); if (found) return found; }
     return null;
   }
   if (typeof value === "object") {
     const obj = value as Record<string, unknown>;
-    if (typeof obj.url === "string" && /^https?:\\/\\//.test(obj.url)) return obj.url;
+    if (typeof obj.url === "string" && (obj.url.startsWith("https://") || obj.url.startsWith("http://"))) return obj.url;
     for (const item of Object.values(obj)) { const found = findVideoUrl(item); if (found) return found; }
   }
   return null;
@@ -77,11 +77,12 @@ export default function Home() {
       });
       if (!resultResponse.ok) throw new Error("Se perdió la conexión con la cola de generación.");
       const raw = await resultResponse.text();
-      const blocks = raw.split("\\n\\n").filter(Boolean);
+      const blocks = raw.split("\n\n").filter(Boolean);
       let result: unknown = null;
       for (const block of blocks) {
-        const event = block.match(/^event:\\s*(\\S+)/m)?.[1];
-        const payload = block.match(/^data:\\s*(.+)$/m)?.[1];
+        const lines = block.split("\n");
+        const event = lines.find(line => line.startsWith("event:"))?.slice(6).trim();
+        const payload = lines.find(line => line.startsWith("data:"))?.slice(5).trim();
         if (event === "error") throw new Error("El motor gratuito no pudo generar el video. Puede estar ocupado; inténtalo de nuevo.");
         if (event === "complete" && payload) result = JSON.parse(payload);
       }

@@ -1,45 +1,37 @@
 # Evolution AI
 
-Plataforma web independiente para crear videos a partir de texto.
+Evolution AI es un estudio web con inicio de sesión individual y una arquitectura prevista para conectar proveedores de generación mediante autorización delegada.
 
-## Motor de generación
+## Inicio de sesión con Google
 
-- Motor principal: LTX Video Fast de Lightricks mediante el Space público de Hugging Face.
-- La generación se solicita directamente desde el navegador para que Hugging Face aplique sus límites por visitante.
-- No requiere FAL_KEY ni saldo de fal.ai.
-- El servicio gratuito es comunitario y está sujeto a disponibilidad, colas y cuotas diarias. No es ilimitado ni garantiza disponibilidad permanente.
+La aplicación usa NextAuth v4 con sesión JWT. Configura estas variables en Vercel (Project → Settings → Environment Variables) y vuelve a desplegar:
 
-## Stack
+- `GOOGLE_CLIENT_ID`: ID OAuth 2.0 de tipo Web application de Google Cloud.
+- `GOOGLE_CLIENT_SECRET`: secreto OAuth de Google Cloud.
+- `NEXTAUTH_SECRET`: secreto aleatorio largo para firmar sesiones.
+- `NEXTAUTH_URL`: URL pública de Evolution AI, por ejemplo `https://tu-dominio.vercel.app`.
 
-- Next.js App Router + TypeScript
-- Gradio Spaces API de Hugging Face
-- LTX Video Fast (Space público)
+En Google Cloud Console configura la pantalla de consentimiento y agrega como URI de redirección autorizada:
+`https://TU-DOMINIO/api/auth/callback/google`
 
-## Desarrollo local
+Para desarrollo local usa `http://localhost:3000/api/auth/callback/google`.
 
-1. Instala Node.js 20.9 o superior.
-2. Ejecuta `npm install`.
-3. Ejecuta `npm run dev`.
-4. Abre http://localhost:3000.
+No compartas el secreto de Google ni lo pongas en variables `NEXT_PUBLIC_*`.
 
-No se necesita configurar FAL_KEY ni otro secreto para el motor comunitario.
+## Proveedores de generación
 
-## Despliegue en Vercel
+- Renderforest publica un servidor MCP remoto con OAuth 2.1 y alcance para generar videos en la cuenta que autoriza: https://mcp.renderforest.com/docs
+- ElevenLabs publica un servidor MCP remoto con OAuth y acceso al espacio de trabajo autorizado: https://elevenlabs.io/docs/eleven-api/resources/mcp-server
 
-1. Importa este repositorio en Vercel.
-2. Usa la rama `main`.
-3. No agregues FAL_KEY: la nueva generación no la utiliza.
-4. Espera a que termine el despliegue y abre el dominio asignado.
+**Estado actual:** se retiró el generador público LTX del sitio y se preparó el inicio de sesión Google y el panel de proveedores. El inicio de sesión requiere las variables anteriores. Las conexiones MCP de los proveedores todavía requieren implementar un cliente MCP OAuth y almacenamiento cifrado de tokens por usuario antes de habilitar generación real. No se deben pedir ni guardar contraseñas o API keys en el navegador.
 
-## Límites actuales
+## Desarrollo
 
-- Duración solicitada: 3, 5 u 8 segundos por generación.
-- Formatos: horizontal, vertical, cuadrado y otros formatos de aspecto.
-- La resolución y la velocidad final dependen del Space y del modelo disponibles.
-- Hugging Face aplica límites de uso gratuitos y puede poner solicitudes en cola o rechazarlas temporalmente.
-- La generación necesita que la página permanezca abierta mientras se completa. Si se cierra o se pierde la conexión, puede ser necesario volver a solicitar el video.
-- No se debe anunciar como generación ilimitada ni como videos de 60 segundos hasta implementar y probar un flujo de escenas y ensamblaje.
+```bash
+npm install
+npm run dev
+```
 
-## Seguridad
+## Importante
 
-No coloques claves privadas en variables `NEXT_PUBLIC_*` ni en el navegador. Este modo comunitario no requiere claves.
+Iniciar sesión con Google solo autentica al usuario en Evolution AI. No concede automáticamente acceso a Renderforest ni ElevenLabs: cada proveedor necesita su consentimiento independiente. No anunciar generación activa hasta que las conexiones y una generación real se hayan probado.

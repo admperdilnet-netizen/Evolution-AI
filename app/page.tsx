@@ -77,7 +77,7 @@ export default function Home() {
       });
       if (!resultResponse.ok) throw new Error("Se perdió la conexión con la cola de generación.");
       const raw = await resultResponse.text();
-      const blocks = raw.split("\n\n").filter(Boolean);
+      const blocks = raw.split(/\r?\n\r?\n/).filter(Boolean);
       let result: unknown = null;
       for (const block of blocks) {
         const lines = block.split("\n");

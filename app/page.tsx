@@ -35,6 +35,10 @@ export default function Home() {
           if (statusData.status === "COMPLETED") {
             if (poller.current) clearInterval(poller.current);
             setBusy(false);
+          } else if (["FAILED", "ERROR", "CANCELLED"].includes(statusData.status)) {
+            if (poller.current) clearInterval(poller.current);
+            setError("El motor no pudo completar el video. Inténtalo otra vez.");
+            setBusy(false);
           }
         } catch (e) {
           if (poller.current) clearInterval(poller.current);

@@ -1,53 +1,96 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 
-type Job = { requestId: string; status: string; videoUrl?: string; error?: string };
+type Job = { requestId: string; status: string; videoUrl?: string };
+
+const SPACE = "https://lightricks-ltx-video-distilled.hf.space";
+const API_NAME = "text_to_video";
+
+function findVideoUrl(value: unknown): string | null {
+  if (!value) return null;
+  if (typeof value === "string") return /^https?:\\/\\//.test(value) ? value : null;
+  if (Array.isArray(value)) {
+    for (const item of value) { const found = findVideoUrl(item); if (found) return found; }
+    return null;
+  }
+  if (typeof value === "object") {
+    const obj = value as Record<string, unknown>;
+    if (typeof obj.url === "string" && /^https?:\\/\\//.test(obj.url)) return obj.url;
+    for (const item of Object.values(obj)) { const found = findVideoUrl(item); if (found) return found; }
+  }
+  return null;
+}
+
+function dimensions(ratio: string, resolution: string) {
+  const longSide = resolution === "480P" ? 832 : 1280;
+  const [rw, rh] = ratio.split(":").map(Number);
+  const scale = longSide / Math.max(rw, rh);
+  const even = (n: number) => Math.max(256, Math.floor(n / 16) * 16);
+  return { width: even(rw * scale), height: even(rh * scale) };
+}
 
 export default function Home() {
   const [prompt, setPrompt] = useState("");
-  const [duration, setDuration] = useState("10");
+  const [duration, setDuration] = useState("5");
   const [aspectRatio, setAspectRatio] = useState("16:9");
   const [resolution, setResolution] = useState("768P");
   const [job, setJob] = useState<Job | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const poller = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  useEffect(() => () => { if (poller.current) clearInterval(poller.current); }, []);
 
   async function generate() {
     setError(""); setJob(null); setBusy(true);
     try {
-      const response = await fetch("/api/generate", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt, duration: Number(duration), aspectRatio, resolution })
+      const { width, height } = dimensions(aspectRatio, resolution);
+      const data = [
+        prompt.trim(),
+        "worst quality, blurry, distorted, watermark",
+        "", "",
+        height, width,
+        "text-to-video",
+        Number(duration),
+        9,
+        Math.floor(Math.random() * 4294967295),
+        true,
+        1,
+        true
+      ];
+      const submit = await fetch(`${SPACE}/gradio_api/call/${API_NAME}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ data })
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "No se pudo iniciar la generación.");
-      setJob({ requestId: data.requestId, status: "IN_QUEUE" });
-      poller.current = setInterval(async () => {
-        try {
-          const statusResponse = await fetch(`/api/status?requestId=${encodeURIComponent(data.requestId)}`);
-          const statusData = await statusResponse.json();
-          if (!statusResponse.ok) throw new Error(statusData.error || "Error consultando el progreso.");
-          setJob({ requestId: data.requestId, ...statusData });
-          if (statusData.status === "COMPLETED") {
-            if (poller.current) clearInterval(poller.current);
-            setBusy(false);
-          } else if (["FAILED", "ERROR", "CANCELLED"].includes(statusData.status)) {
-            if (poller.current) clearInterval(poller.current);
-            setError("El motor no pudo completar el video. Inténtalo otra vez.");
-            setBusy(false);
-          }
-        } catch (e) {
-          if (poller.current) clearInterval(poller.current);
-          setError(e instanceof Error ? e.message : "Error consultando el progreso.");
-          setBusy(false);
-        }
-      }, 4000);
+      if (!submit.ok) {
+        const detail = await submit.text();
+        throw new Error(submit.status === 429
+          ? "El motor gratuito está ocupado o alcanzó su cuota temporal. Espera un poco y vuelve a intentarlo."
+          : `No se pudo conectar con el motor gratuito (HTTP ${submit.status}). ${detail.slice(0, 180)}`);
+      }
+      const submitted = await submit.json();
+      if (!submitted.event_id) throw new Error("El motor no devolvió un identificador de trabajo.");
+
+      const resultResponse = await fetch(`${SPACE}/gradio_api/call/${API_NAME}/${encodeURIComponent(submitted.event_id)}`, {
+        method: "GET",
+        headers: { "Accept": "text/event-stream" },
+        cache: "no-store"
+      });
+      if (!resultResponse.ok) throw new Error("Se perdió la conexión con la cola de generación.");
+      const raw = await resultResponse.text();
+      const blocks = raw.split("\\n\\n").filter(Boolean);
+      let result: unknown = null;
+      for (const block of blocks) {
+        const event = block.match(/^event:\\s*(\\S+)/m)?.[1];
+        const payload = block.match(/^data:\\s*(.+)$/m)?.[1];
+        if (event === "error") throw new Error("El motor gratuito no pudo generar el video. Puede estar ocupado; inténtalo de nuevo.");
+        if (event === "complete" && payload) result = JSON.parse(payload);
+      }
+      const videoUrl = findVideoUrl(result);
+      if (!videoUrl) throw new Error("El motor terminó, pero no devolvió un archivo de video reproducible.");
+      setJob({ requestId: submitted.event_id, status: "COMPLETED", videoUrl });
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Ocurrió un error.");
+      setError(e instanceof Error ? e.message : "Ocurrió un error al generar el video.");
+    } finally {
       setBusy(false);
     }
   }
@@ -67,19 +110,19 @@ export default function Home() {
           <textarea id="prompt" value={prompt} onChange={e => setPrompt(e.target.value)} maxLength={4000} placeholder="Ej.: Un automóvil deportivo recorriendo una carretera costera al atardecer, tomas cinematográficas, luz dorada, movimiento fluido..." />
           <div className="counter">{prompt.length.toLocaleString("es-DO")} / 4,000</div>
           <div className="settings">
-            <div><label htmlFor="duration">Duración</label><select id="duration" value={duration} onChange={e => setDuration(e.target.value)}><option value="5">5 segundos</option><option value="10">10 segundos</option><option value="15">15 segundos</option></select></div>
+            <div><label htmlFor="duration">Duración</label><select id="duration" value={duration} onChange={e => setDuration(e.target.value)}><option value="3">3 segundos</option><option value="5">5 segundos</option><option value="8">8 segundos</option></select></div>
             <div><label htmlFor="ratio">Formato</label><select id="ratio" value={aspectRatio} onChange={e => setAspectRatio(e.target.value)}><option value="16:9">Horizontal · 16:9</option><option value="9:16">Vertical · 9:16</option><option value="1:1">Cuadrado · 1:1</option><option value="4:3">Clásico · 4:3</option><option value="3:4">Retrato · 3:4</option><option value="21:9">Cinemático · 21:9</option></select></div>
-            <div><label htmlFor="resolution">Resolución</label><select id="resolution" value={resolution} onChange={e => setResolution(e.target.value)}><option value="480P">480P</option><option value="768P">768P · Recomendada</option><option value="1080P">1080P · Refinada</option></select></div>
+            <div><label htmlFor="resolution">Calidad</label><select id="resolution" value={resolution} onChange={e => setResolution(e.target.value)}><option value="480P">Estándar</option><option value="768P">Alta · hasta 1280 px</option></select></div>
           </div>
-          <button className="generate" onClick={generate} disabled={busy || prompt.trim().length < 8}><span>✦</span>{busy ? "Creando tu video..." : "Generar video"}<b>↗</b></button>
-          <p className="notice">La generación usa el motor de video de fal.ai. Puede consumir créditos de tu cuenta.</p>
+          <button className="generate" onClick={generate} disabled={busy || prompt.trim().length < 8}><span>✦</span>{busy ? "Generando con motor gratuito..." : "Generar video"}<b>↗</b></button>
+          <p className="notice">Motor LTX Video comunitario. Uso gratuito sujeto a disponibilidad, cola y límites diarios de Hugging Face. No requiere saldo FAL.</p>
           {error && <div className="error" role="alert">{error}</div>}
         </div>
         <div className="preview">
-          <div className="preview-head"><span>02 / RESULTADO</span><span className="live-dot">● MOTOR CONECTADO</span></div>
-          {!job?.videoUrl ? <div className="empty"><div className="orb"><span>✦</span></div><h3>{busy ? "Tu idea está tomando forma" : "Tu próximo video empieza aquí"}</h3><p>{busy ? (job?.status === "IN_PROGRESS" ? "El motor está creando las imágenes en movimiento..." : "Preparando tu generación. Esto puede tardar unos minutos.") : "Tu creación aparecerá en este espacio cuando esté lista."}</p>{busy && <div className="loader"><i /></div>}</div> :
+          <div className="preview-head"><span>02 / RESULTADO</span><span className="live-dot">● MOTOR LTX VIDEO</span></div>
+          {!job?.videoUrl ? <div className="empty"><div className="orb"><span>✦</span></div><h3>{busy ? "Tu idea está tomando forma" : "Tu próximo video empieza aquí"}</h3><p>{busy ? "Enviando a la cola gratuita. La generación puede tardar varios minutos; no cierres esta página." : "Tu creación aparecerá en este espacio cuando esté lista."}{busy ? "" : ""}</p>{busy && <div className="loader"><i /></div>}</div> :
             <div className="result"><video src={job.videoUrl} controls playsInline /><a className="download" href={job.videoUrl} target="_blank" rel="noreferrer" download>Descargar video ↗</a></div>}
-          <div className="preview-foot"><span>EVOLUTION AI STUDIO</span><span>POWERED BY FAL.AI</span></div>
+          <div className="preview-foot"><span>EVOLUTION AI STUDIO</span><span>POWERED BY LTX VIDEO</span></div>
         </div>
       </section>
       <footer><span>EVOLUTION AI © 2026</span><span>CREA SIN LÍMITES. IMAGINA SIN FRONTERAS.</span></footer>

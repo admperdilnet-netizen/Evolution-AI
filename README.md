@@ -1,29 +1,20 @@
 # Evolution AI
 
-Evolution AI es un estudio web con inicio de sesión individual y una arquitectura prevista para conectar proveedores de generación mediante autorización delegada.
+Evolution AI es un estudio web público para crear videos a partir de texto. No requiere registro ni inicio de sesión.
 
-## Inicio de sesión con Google
+## Generación de video
 
-La aplicación usa NextAuth v4 con sesión JWT. Configura estas variables en Vercel (Project → Settings → Environment Variables) y vuelve a desplegar:
+La aplicación usa el endpoint `minimax/h3-max-turbo/text-to-video` de fal.ai desde rutas de servidor de Next.js.
 
-- `GOOGLE_CLIENT_ID`: ID OAuth 2.0 de tipo Web application de Google Cloud.
-- `GOOGLE_CLIENT_SECRET`: secreto OAuth de Google Cloud.
-- `NEXTAUTH_SECRET`: secreto aleatorio largo para firmar sesiones.
-- `NEXTAUTH_URL`: URL pública de Evolution AI, por ejemplo `https://tu-dominio.vercel.app`.
+Configura en Vercel → Project → Settings → Environment Variables:
 
-En Google Cloud Console configura la pantalla de consentimiento y agrega como URI de redirección autorizada:
-`https://TU-DOMINIO/api/auth/callback/google`
+- `FAL_KEY`: clave privada de fal.ai. Debe estar disponible para Production (y Preview si corresponde).
 
-Para desarrollo local usa `http://localhost:3000/api/auth/callback/google`.
+Después de agregar o cambiar la variable, crea un nuevo despliegue. Nunca uses un prefijo `NEXT_PUBLIC_` para esta clave ni la compartas en el navegador.
 
-No compartas el secreto de Google ni lo pongas en variables `NEXT_PUBLIC_*`.
+La interfaz permite crear clips de 6, 10 o 15 segundos, en 9:16, 16:9, 1:1 o 4:3 y 480P, 768P o 1080P. El resultado se consulta mediante la cola de fal.ai y se muestra en el reproductor.
 
-## Proveedores de generación
-
-- Renderforest publica un servidor MCP remoto con OAuth 2.1 y alcance para generar videos en la cuenta que autoriza: https://mcp.renderforest.com/docs
-- ElevenLabs publica un servidor MCP remoto con OAuth y acceso al espacio de trabajo autorizado: https://elevenlabs.io/docs/eleven-api/resources/mcp-server
-
-**Estado actual:** se retiró el generador público LTX del sitio y se preparó el inicio de sesión Google y el panel de proveedores. El inicio de sesión requiere las variables anteriores. Las conexiones MCP de los proveedores todavía requieren implementar un cliente MCP OAuth y almacenamiento cifrado de tokens por usuario antes de habilitar generación real. No se deben pedir ni guardar contraseñas o API keys en el navegador.
+La generación consume créditos de la cuenta fal.ai asociada a `FAL_KEY`. El coste depende de duración, resolución y tarifa vigente; confirma los precios en fal.ai antes de usar la plataforma. La limitación por IP incluida en la ruta es solo una protección básica y no sustituye un sistema robusto de cuotas o control de abuso para un servicio público.
 
 ## Desarrollo
 
@@ -32,6 +23,8 @@ npm install
 npm run dev
 ```
 
-## Importante
+## Seguridad
 
-Iniciar sesión con Google solo autentica al usuario en Evolution AI. No concede automáticamente acceso a Renderforest ni ElevenLabs: cada proveedor necesita su consentimiento independiente. No anunciar generación activa hasta que las conexiones y una generación real se hayan probado.
+- La clave de fal.ai solo se lee en el servidor.
+- Las rutas validan el texto, duración, formato y resolución.
+- No expongas secretos en el código, en variables `NEXT_PUBLIC_*` ni en el navegador.

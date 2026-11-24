@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Evolution AI — Tu estudio audiovisual",
-  description: "Accede con Google y conecta tus propias cuentas de creación audiovisual."
+  description: "Explora Evolution AI sin registro ni inicio de sesión."
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

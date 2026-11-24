@@ -1,20 +1,38 @@
 # Evolution AI
 
-Evolution AI es un estudio web público para crear videos a partir de texto. No requiere registro ni inicio de sesión.
+Evolution AI es un estudio web público de texto a video. No requiere inicio de sesión de Google ni servicios de generación de pago.
 
-## Generación de video
+## Motor gratuito
 
-La aplicación usa el endpoint `minimax/h3-max-turbo/text-to-video` de fal.ai desde rutas de servidor de Next.js.
+La generación se conecta al Space oficial **Lightricks/LTX-2.5** en Hugging Face ZeroGPU:
 
-Configura en Vercel → Project → Settings → Environment Variables:
+- API pública del Space: `https://huggingface.co/spaces/Lightricks/LTX-2.5`
+- Modelo: LTX-2.5 (texto a video con audio).
+- Aplicación web: Next.js en Vercel.
+- No usa fal.ai ni requiere `FAL_KEY`.
 
-- `FAL_KEY`: clave privada de fal.ai. Debe estar disponible para Production (y Preview si corresponde).
+La cuota publicada para una cuenta gratuita autenticada de Hugging Face es de **5 minutos de GPU al día**. Sin autenticar, la cuota publicada es de 2 minutos diarios. La cuota es limitada, se comparte por token y puede haber cola o indisponibilidad. No son generaciones ilimitadas. El Space reserva tiempo de GPU antes de ejecutar; con la configuración inicial de resolución contenida y 2 segundos por clip, el número de clips diarios será pequeño.
 
-Después de agregar o cambiar la variable, crea un nuevo despliegue. Nunca uses un prefijo `NEXT_PUBLIC_` para esta clave ni la compartas en el navegador.
+## Configuración de Vercel
 
-La interfaz permite crear clips de 6, 10 o 15 segundos, en 9:16, 16:9, 1:1 o 4:3 y 480P, 768P o 1080P. El resultado se consulta mediante la cola de fal.ai y se muestra en el reproductor.
+1. Crea una cuenta gratuita en Hugging Face y verifica el correo.
+2. Crea un token personal en https://huggingface.co/settings/tokens. Un token de lectura es suficiente para invocar el Space público.
+3. En Vercel abre el proyecto Evolution AI → Settings → Environment Variables.
+4. Añade `HF_TOKEN` con el token como valor privado para Production (y Preview si lo usas).
+5. Guarda y crea un nuevo despliegue de Production.
 
-La generación consume créditos de la cuenta fal.ai asociada a `FAL_KEY`. El coste depende de duración, resolución y tarifa vigente; confirma los precios en fal.ai antes de usar la plataforma. La limitación por IP incluida en la ruta es solo una protección básica y no sustituye un sistema robusto de cuotas o control de abuso para un servicio público.
+No pongas el token en el código, en GitHub, en variables `NEXT_PUBLIC_*` ni en el navegador. El token solo se lee desde la ruta de servidor `/api/generate`.
+
+## Generación actual
+
+- Texto a video.
+- LTX-2.5 a través de Hugging Face ZeroGPU.
+- Clips iniciales de 2 segundos.
+- Formatos vertical 9:16, horizontal 16:9, cuadrado 1:1 y clásico 4:3.
+- Resolución reducida para limitar el tiempo de GPU.
+- La mejora automática del prompt está desactivada para no consumir una segunda cuota de GPU.
+
+El enlace del video lo entrega el Space y puede ser temporal; descarga el resultado para conservarlo.
 
 ## Desarrollo
 
@@ -22,9 +40,3 @@ La generación consume créditos de la cuenta fal.ai asociada a `FAL_KEY`. El co
 npm install
 npm run dev
 ```
-
-## Seguridad
-
-- La clave de fal.ai solo se lee en el servidor.
-- Las rutas validan el texto, duración, formato y resolución.
-- No expongas secretos en el código, en variables `NEXT_PUBLIC_*` ni en el navegador.

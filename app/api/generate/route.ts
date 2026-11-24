@@ -113,6 +113,8 @@ export async function POST(request: NextRequest) {
     if (!eventId || !/^[a-zA-Z0-9_-]{6,200}$/.test(eventId)) {
       return NextResponse.json({ error: "Hugging Face no devolvió un identificador de trabajo válido." }, { status: 502 });
     }
+    // Start the cooldown as soon as the job is accepted, not after it finishes.
+    recentRequests.set(ip, Date.now());
 
     const resultResponse = await fetch(`${SPACE_URL}/gradio_api/call/${API_NAME}/${encodeURIComponent(eventId)}`, {
       headers: authHeaders(),
@@ -130,7 +132,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "LTX-2.5 terminó, pero no devolvió una URL de video reconocida." }, { status: 502 });
     }
 
-    recentRequests.set(ip, Date.now());
     return NextResponse.json({ status: "COMPLETED", videoUrl });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Error conectando con Hugging Face ZeroGPU.";

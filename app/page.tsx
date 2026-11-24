@@ -1,26 +1,14 @@
-import { getServerSession } from "next-auth";
-import { redirect } from "next/navigation";
-import { authOptions } from "@/auth";
-import SignOutButton from "./signout-button";
-
-export default async function Home() {
-  const session = await getServerSession(authOptions);
-  if (!session) redirect("/login");
-  const name = session.user?.name || session.user?.email || "Usuario";
+export default function Home() {
   return (
     <main className="shell">
       <nav className="topbar">
         <a className="brand" href="#"><span className="brand-mark">E</span><span>EVOLUTION <b>AI</b></span></a>
-        <div className="account-area">
-          {session.user?.image && <img className="avatar" src={session.user.image} alt="" />}
-          <span>{name}</span>
-          <SignOutButton />
-        </div>
+        <div className="account-area"><span>Acceso público · Sin registro</span></div>
       </nav>
       <section className="hero">
         <div className="eyebrow">✦ TU ESTUDIO AUDIOVISUAL</div>
         <h1>Bienvenido a <em>Evolution AI.</em></h1>
-        <p className="intro">Conecta tus propias cuentas para crear contenido desde un solo lugar.</p>
+        <p className="intro">Entra y explora las herramientas de creación audiovisual sin iniciar sesión.</p>
       </section>
       <section className="provider-grid">
         <article className="provider-card">
@@ -40,7 +28,7 @@ export default async function Home() {
           <a href="https://elevenlabs.io/docs/eleven-api/resources/mcp-server" target="_blank" rel="noreferrer">Ver documentación oficial ↗</a>
         </article>
       </section>
-      <p className="account-note">Sesión iniciada con Google: <strong>{session.user?.email}</strong>. Cada motor requerirá su propia autorización. Todavía no se ejecutan generaciones hasta completar y probar esas conexiones.</p>
+      <p className="account-note">Puedes explorar Evolution AI sin crear una cuenta. Cuando conectes un motor externo, ese proveedor podrá solicitar su propia autorización.</p>
       <footer><span>EVOLUTION AI © 2026</span><span>TUS CUENTAS · TUS PERMISOS · TUS CRÉDITOS</span></footer>
     </main>
   );

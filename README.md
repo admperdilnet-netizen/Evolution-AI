@@ -11,7 +11,7 @@ La generación se conecta al Space oficial **Lightricks/LTX-2.5** en Hugging Fac
 - Aplicación web: Next.js en Vercel.
 - No usa fal.ai ni requiere `FAL_KEY`.
 
-La cuota publicada para una cuenta gratuita autenticada de Hugging Face es de **5 minutos de GPU al día**. Sin autenticar, la cuota publicada es de 2 minutos diarios. La cuota es limitada, se comparte por token y puede haber cola o indisponibilidad. No son generaciones ilimitadas. El Space reserva tiempo de GPU antes de ejecutar; con la configuración inicial de resolución contenida y 2 segundos por clip, el número de clips diarios será pequeño.
+La cuota gratuita de Hugging Face es limitada, se comparte por token y puede haber cola o indisponibilidad. No son generaciones ilimitadas. LTX-2.5 reserva GPU xlarge y las solicitudes más largas o grandes consumen más cuota.
 
 ## Configuración de Vercel
 
@@ -23,16 +23,15 @@ La cuota publicada para una cuenta gratuita autenticada de Hugging Face es de **
 
 No pongas el token en el código, en GitHub, en variables `NEXT_PUBLIC_*` ni en el navegador. El token solo se lee desde la ruta de servidor `/api/generate`.
 
-## Generación actual
+## Opciones de generación
 
-- Texto a video.
-- LTX-2.5 a través de Hugging Face ZeroGPU.
-- Clips iniciales de 2 segundos.
-- Formatos vertical 9:16, horizontal 16:9, cuadrado 1:1 y clásico 4:3.
-- Resolución reducida para limitar el tiempo de GPU.
-- La mejora automática del prompt está desactivada para no consumir una segunda cuota de GPU.
+- Texto a video con LTX-2.5 a través de Hugging Face ZeroGPU.
+- Duración seleccionable: 1, 2, 3, 4 o 5 segundos (24 fps).
+- Formatos: vertical 9:16, horizontal 16:9, cuadrado 1:1 y clásico 4:3.
+- Calidad seleccionable: Ahorro, Estándar y Alta definición. Cada preset usa dimensiones compatibles con el Space (múltiplos de 64, entre 512 y 1536 píxeles).
+- La mejora automática del prompt está desactivada para no consumir cuota de una segunda GPU.
 
-El enlace del video lo entrega el Space y puede ser temporal; descarga el resultado para conservarlo.
+Los clips más largos y los niveles de calidad altos consumen más cuota. El enlace del video lo entrega el Space y puede ser temporal; descarga el resultado para conservarlo.
 
 ## Desarrollo
 

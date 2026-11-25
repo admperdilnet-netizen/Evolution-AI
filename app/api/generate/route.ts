@@ -12,7 +12,7 @@ type GradioResult = unknown[];
 
 function authHeaders(): HeadersInit {
   const token = process.env.HF_TOKEN;
-  if (!token) throw new Error("Falta HF_TOKEN en Vercel. Crea un token gratuito de Hugging Face y guárdalo como variable privada HF_TOKEN en Settings → Environment Variables.");
+  if (!token) throw new Error("Falta HF_TOKEN en Vercel. Guarda el token privado de Hugging Face en Settings → Environment Variables.");
   return { Authorization: `Bearer ${token}` };
 }
 
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
   const token = process.env.HF_TOKEN;
   if (!token) {
     return NextResponse.json({
-      error: "Evolution AI necesita un token gratuito de Hugging Face para usar tu cuota personal de ZeroGPU. No cuesta dinero ni requiere tarjeta. Créalo en huggingface.co/settings/tokens y añádelo en Vercel → Project → Settings → Environment Variables con el nombre HF_TOKEN."
+      error: "Evolution AI necesita tu token gratuito de Hugging Face. Añade HF_TOKEN como variable privada en Vercel → Settings → Environment Variables."
     }, { status: 503 });
   }
 
@@ -71,11 +71,20 @@ export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
   const prompt = typeof body?.prompt === "string" ? body.prompt.trim() : "";
   const aspectRatio = body?.aspectRatio;
+  const duration = Number(body?.duration);
+  const quality = body?.quality;
+
   if (prompt.length < 8 || prompt.length > 1800) {
     return NextResponse.json({ error: "La descripción debe tener entre 8 y 1800 caracteres." }, { status: 400 });
   }
+  if (![1, 2, 3, 4, 5].includes(duration)) {
+    return NextResponse.json({ error: "Selecciona una duración entre 1 y 5 segundos." }, { status: 400 });
+  }
   if (!["9:16", "16:9", "1:1", "4:3"].includes(aspectRatio)) {
     return NextResponse.json({ error: "Formato no permitido." }, { status: 400 });
+  }
+  if (!["economy", "standard", "high"].includes(quality)) {
+    return NextResponse.json({ error: "Selecciona un nivel de calidad válido." }, { status: 400 });
   }
 
   let headers: HeadersInit;
@@ -84,21 +93,38 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Falta configurar HF_TOKEN." }, { status: 503 });
   }
 
-  const dimensions: Record<string, { height: number; width: number }> = {
-    "9:16": { height: 1024, width: 576 },
-    "16:9": { height: 576, width: 1024 },
-    "1:1": { height: 768, width: 768 },
-    "4:3": { height: 1024, width: 768 }
+  // The official LTX-2.5 Space requires dimensions divisible by 64.
+  // Quality presets keep every dimension within the Space's 512–1536 slider range.
+  const dimensionPresets: Record<string, Record<string, { height: number; width: number }>> = {
+    economy: {
+      "9:16": { height: 1024, width: 576 },
+      "16:9": { height: 576, width: 1024 },
+      "1:1": { height: 576, width: 576 },
+      "4:3": { height: 576, width: 768 }
+    },
+    standard: {
+      "9:16": { height: 1152, width: 640 },
+      "16:9": { height: 640, width: 1152 },
+      "1:1": { height: 768, width: 768 },
+      "4:3": { height: 768, width: 1024 }
+    },
+    high: {
+      "9:16": { height: 1472, width: 832 },
+      "16:9": { height: 832, width: 1472 },
+      "1:1": { height: 1024, width: 1024 },
+      "4:3": { height: 960, width: 1280 }
+    }
   };
-  const { height, width } = dimensions[aspectRatio as string];
+  const { height, width } = dimensionPresets[quality as string][aspectRatio as string];
 
   try {
-    // LTX-2.5 official ZeroGPU Space. Keep prompt enhancement off to avoid a second GPU Space/quota.
+    // The Space's public /run API inputs are:
+    // prompt, image, height, width, duration_s, seed, decoder, auto_len, randomize_seed, do_enhance.
     const submit = await fetch(`${SPACE_URL}/gradio_api/call/${API_NAME}`, {
       method: "POST",
       headers,
       body: JSON.stringify({
-        data: [prompt, null, height, width, 2.0, 42, "conv", false, true, false]
+        data: [prompt, null, height, width, duration, 42, "conv", false, true, false]
       }),
       cache: "no-store",
       signal: AbortSignal.timeout(25_000)

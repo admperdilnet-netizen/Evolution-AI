@@ -4,7 +4,9 @@ import { useState } from "react";
 
 export default function Home() {
   const [prompt, setPrompt] = useState("");
+  const [duration, setDuration] = useState("2");
   const [ratio, setRatio] = useState("9:16");
+  const [quality, setQuality] = useState("economy");
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
@@ -19,21 +21,25 @@ export default function Home() {
     setBusy(true);
     setError("");
     setVideoUrl("");
-    setStatus("Conectando con Hugging Face ZeroGPU…");
+    setStatus(`Enviando un clip de ${duration} segundo(s) a Hugging Face ZeroGPU…`);
 
     try {
-      setStatus("Enviando tu escena a la cola gratuita de LTX-2.5. La generación puede tardar.");
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: prompt.trim(), aspectRatio: ratio }),
+        body: JSON.stringify({
+          prompt: prompt.trim(),
+          duration: Number(duration),
+          aspectRatio: ratio,
+          quality
+        }),
         cache: "no-store"
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || "No se pudo completar la generación.");
 
       setVideoUrl(data.videoUrl);
-      setStatus("¡Video terminado! Descárgalo para conservarlo.");
+      setStatus(`¡Video terminado! Duración solicitada: ${duration} segundo(s). Descárgalo para conservarlo.`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Ocurrió un error inesperado.");
       setStatus("");
@@ -51,7 +57,7 @@ export default function Home() {
       <section className="hero">
         <div className="eyebrow"><span className="spark">✦</span> TU ESTUDIO AUDIOVISUAL</div>
         <h1>Convierte tus ideas en <em>video.</em></h1>
-        <p className="intro">Describe tu escena, elige el formato y deja que Evolution AI la cree.</p>
+        <p className="intro">Describe tu escena, elige la duración, la calidad y el formato, y deja que Evolution AI la cree.</p>
       </section>
       <section className="workspace">
         <div className="panel">
@@ -66,12 +72,19 @@ export default function Home() {
             onChange={e => setPrompt(e.target.value)}
             maxLength={1800}
             placeholder="Ejemplo: Un caballo blanco corre por una playa tropical al amanecer, cámara cinematográfica suave, olas y brisa moviendo su crin…"
+            disabled={busy}
           />
           <div className="counter">{prompt.length}/1800</div>
           <div className="settings">
             <div>
-              <label htmlFor="duration">Duración inicial</label>
-              <select id="duration" value="2 segundos" disabled><option>2 segundos</option></select>
+              <label htmlFor="duration">Duración</label>
+              <select id="duration" value={duration} onChange={e => setDuration(e.target.value)} disabled={busy}>
+                <option value="1">1 segundo</option>
+                <option value="2">2 segundos</option>
+                <option value="3">3 segundos</option>
+                <option value="4">4 segundos</option>
+                <option value="5">5 segundos</option>
+              </select>
             </div>
             <div>
               <label htmlFor="ratio">Formato</label>
@@ -83,17 +96,20 @@ export default function Home() {
               </select>
             </div>
             <div>
-              <label htmlFor="resolution">Resolución</label>
-              <select id="resolution" value="576p optimizada" disabled><option>576p optimizada</option></select>
+              <label htmlFor="quality">Calidad</label>
+              <select id="quality" value={quality} onChange={e => setQuality(e.target.value)} disabled={busy}>
+                <option value="economy">Ahorro de cuota</option>
+                <option value="standard">Estándar</option>
+                <option value="high">Alta definición</option>
+              </select>
             </div>
           </div>
           <button className="generate" onClick={generate} disabled={busy}>
             {busy ? "GENERANDO EN ZEROGPU…" : "CREAR VIDEO"} <b>{busy ? "…" : "↗"}</b>
           </button>
           <p className="notice">
-            Motor LTX-2.5 en Hugging Face ZeroGPU. El modo gratuito ofrece una cuota diaria limitada
-            (5 minutos de GPU con cuenta gratuita autenticada). Clips iniciales de 2 segundos y resolución optimizada.
-            No se usa fal.ai ni se compran créditos.
+            Motor LTX-2.5 en Hugging Face ZeroGPU. Puedes elegir entre 1 y 5 segundos y tres niveles de calidad.
+            Los clips más largos y la calidad alta consumen más de tu cuota gratuita. No se usa fal.ai ni se compran créditos.
           </p>
           {status && <p className="notice" aria-live="polite">{status}</p>}
           {error && <div className="error" role="alert">{error}</div>}

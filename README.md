@@ -39,3 +39,14 @@ Los clips más largos y los niveles de calidad altos consumen más cuota. El enl
 npm install
 npm run dev
 ```
+
+
+## Videos largos
+
+La modalidad de proyecto largo genera escenas de 5 segundos y las une en un MP4 final:
+
+- 30 segundos: 6 escenas; 45 segundos: 9 escenas; 60 segundos: 12 escenas.
+- El prompt y la semilla se mantienen para orientar la continuidad, pero las escenas pueden variar porque no se usa una imagen de referencia entre segmentos.
+- Los videos se guardan en IndexedDB del navegador y el MP4 final se une localmente con ffmpeg.wasm.
+- El progreso se puede continuar en el mismo navegador. No borres los datos del sitio antes de descargar el video final.
+- La cuota de ZeroGPU es limitada; un proyecto largo puede necesitar varios días.

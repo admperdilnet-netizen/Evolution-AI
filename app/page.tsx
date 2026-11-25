@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import LongVideoBuilder from "./long-video-builder";
 
 export default function Home() {
   const [prompt, setPrompt] = useState("");
@@ -131,6 +132,7 @@ export default function Home() {
           <div className="preview-foot"><span>EVOLUTION AI</span><span>CREATIVIDAD SIN LÍMITES</span></div>
         </div>
       </section>
+      <LongVideoBuilder />
       <footer><span>EVOLUTION AI © 2026</span><span>CREA · PREVISUALIZA · DESCARGA</span></footer>
     </main>
   );

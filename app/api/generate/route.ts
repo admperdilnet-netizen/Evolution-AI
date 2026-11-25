@@ -73,6 +73,8 @@ export async function POST(request: NextRequest) {
   const aspectRatio = body?.aspectRatio;
   const duration = Number(body?.duration);
   const quality = body?.quality;
+  const seed = Number.isSafeInteger(body?.seed) ? Math.max(0, Math.min(2_147_483_647, Number(body.seed))) : 42;
+  const randomizeSeed = typeof body?.randomizeSeed === "boolean" ? body.randomizeSeed : true;
 
   if (prompt.length < 8 || prompt.length > 1800) {
     return NextResponse.json({ error: "La descripción debe tener entre 8 y 1800 caracteres." }, { status: 400 });
@@ -124,7 +126,7 @@ export async function POST(request: NextRequest) {
       method: "POST",
       headers,
       body: JSON.stringify({
-        data: [prompt, null, height, width, duration, 42, "conv", false, true, false]
+        data: [prompt, null, height, width, duration, seed, "conv", false, randomizeSeed, false]
       }),
       cache: "no-store",
       signal: AbortSignal.timeout(25_000)

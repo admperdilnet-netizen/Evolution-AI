@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     if (!resultResponse.ok) return NextResponse.json({ error: "No se pudo recuperar el video de CogVideoX." }, { status: resultResponse.status });
     const result = parseSse(raw);
     const url = extractVideoUrl(result);
-    if (!url || !/^https:\\/\\//i.test(url)) return NextResponse.json({ error: "CogVideoX terminó, pero no devolvió una URL reconocible." }, { status: 502 });
+    if (!url || !url.startsWith("https://")) return NextResponse.json({ error: "CogVideoX terminó, pero no devolvió una URL reconocible." }, { status: 502 });
     return NextResponse.json({ status: "COMPLETED", videoUrl: url });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Error conectando con CogVideoX.";

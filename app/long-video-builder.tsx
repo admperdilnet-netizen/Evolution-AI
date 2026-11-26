@@ -105,7 +105,11 @@ async function generateScene(prompt: string, duration: number, aspectRatio: stri
       if (response.status === 429 && typeof data.error === "string" && data.error.includes("Espera dos minutos")) {
         throw new Error("RATE_LIMIT:" + data.error);
       }
-      throw new Error(data.error || "No se pudo generar esta escena.");
+      const upstreamError = typeof data.error === "string" ? data.error : "";
+      if (/quota exceeded|exceeded.*quota|zerogpu.*quota|free.*quota/i.test(upstreamError)) {
+        throw new Error("CUOTA_AGOTADA: Hugging Face agotó la cuota gratuita de ZeroGPU. LTX y CogVideoX usan la cuota ZeroGPU de tu cuenta, por lo que cambiar de motor no la recupera. Espera al reinicio de cuota; tus escenas guardadas se conservarán.");
+      }
+      throw new Error(upstreamError || "No se pudo generar esta escena.");
     }
     if (typeof data.videoUrl !== "string") throw new Error("El motor no devolvió el archivo de video.");
     return data.videoUrl as string;
@@ -387,8 +391,8 @@ export default function LongVideoBuilder() {
           </div>
 
           <div className="long-builder-note">
-            CogVideoX es una demo pública con cuota variable y formato fijo; sus clips pueden salir horizontales. Cada segmento dura 5 segundos. Los segmentos se guardan automáticamente y puedes continuar otro día en este mismo navegador.
-            Con la cuota gratuita, los proyectos largos pueden requerir varios días.
+            LTX-2.5 y CogVideoX usan cuota ZeroGPU de Hugging Face vinculada a tu cuenta; cambiar entre ellos no evita que se agote. Cada segmento dura 5 segundos. Las escenas terminadas se guardan automáticamente para continuar más tarde. Para tener un respaldo real necesitamos conectar un proveedor externo gratuito con su propia cuota (por ejemplo Agnes, que requiere una clave API).
+            La cuota gratuita puede limitar cuántos segmentos se generan cada día.
           </div>
 
           <button className="generate" type="button" onClick={createLongVideo} disabled={busy}>

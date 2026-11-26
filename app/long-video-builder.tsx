@@ -107,12 +107,7 @@ async function generateScene(prompt: string, duration: number, aspectRatio: stri
     return data.videoUrl as string;
   };
 
-  try {
-    return await send();
-  } catch (error) {
-    
-    throw error;
-  }
+  return send();
 }
 
 async function downloadScene(videoUrl: string): Promise<Blob> {

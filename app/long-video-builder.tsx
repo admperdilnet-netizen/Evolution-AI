@@ -78,10 +78,6 @@ function scenePrompt(base: string, index: number, count: number): string {
     " Preserve the same characters, faces, clothing, location, props, lighting, color grade, camera style and atmosphere. Do not introduce unrelated protagonists. Make it feel like the next moment in the same film. No captions, titles, logos or watermarks.";
 }
 
-async function wait(ms: number): Promise<void> {
-  await new Promise(resolve => window.setTimeout(resolve, ms));
-}
-
 async function generateScene(prompt: string, duration: number, aspectRatio: string, _quality: string, seed: number, _engine: string): Promise<string> {
   const requestBody = { prompt, duration, aspectRatio, seed };
 

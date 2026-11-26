@@ -82,7 +82,7 @@ async function wait(ms: number): Promise<void> {
   await new Promise(resolve => window.setTimeout(resolve, ms));
 }
 
-async function generateScene(prompt: string, duration: number, aspectRatio: string, quality: string, seed: number, engine: string): Promise<string> {
+async function generateScene(prompt: string, duration: number, aspectRatio: string, _quality: string, seed: number, _engine: string): Promise<string> {
   const requestBody = { prompt, duration, aspectRatio, seed };
 
   const send = async () => {
@@ -94,11 +94,11 @@ async function generateScene(prompt: string, duration: number, aspectRatio: stri
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
-      if (response.status === 429 && typeof data.error === "string" && data.error.includes("Espera dos minutos")) {
-        throw new Error("RATE_LIMIT:" + data.error);
+      if (response.status === 429) {
+        throw new Error("AGNES_LIMITE: " + (typeof data.error === "string" ? data.error : "Agnes AI alcanzó su límite temporal de solicitudes. Tus escenas guardadas se conservarán."));
       }
       const upstreamError = typeof data.error === "string" ? data.error : "";
-      if (/quota|limit|rate.?limit|free.*exhausted/i.test(upstreamError)) {
+      if (/quota|limit|l[ií]mite|rate.?limit|free.*exhausted/i.test(upstreamError)) {
         throw new Error("AGNES_LIMITE: Agnes AI alcanzó temporalmente el límite de uso gratuito. Tus escenas guardadas se conservarán; espera antes de continuar.");
       }
       throw new Error(upstreamError || "No se pudo generar esta escena.");
@@ -110,10 +110,7 @@ async function generateScene(prompt: string, duration: number, aspectRatio: stri
   try {
     return await send();
   } catch (error) {
-    if (error instanceof Error && error.message.startsWith("RATE_LIMIT:")) {
-      await wait(122_000);
-      return send();
-    }
+    
     throw error;
   }
 }

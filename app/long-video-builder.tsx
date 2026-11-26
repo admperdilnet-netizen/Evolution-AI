@@ -8,6 +8,7 @@ type LongProject = {
   targetSeconds: number;
   aspectRatio: string;
   quality: string;
+  engine: string;
   seed: number;
   segments: LongScene[];
   finalBlob?: Blob;

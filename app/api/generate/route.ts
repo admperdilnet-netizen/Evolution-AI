@@ -99,10 +99,10 @@ export async function POST(request: NextRequest) {
   // Quality presets keep every dimension within the Space's 512–1536 slider range.
   const dimensionPresets: Record<string, Record<string, { height: number; width: number }>> = {
     economy: {
-      "9:16": { height: 1024, width: 576 },
-      "16:9": { height: 576, width: 1024 },
-      "1:1": { height: 576, width: 576 },
-      "4:3": { height: 576, width: 768 }
+      "9:16": { height: 768, width: 512 },
+      "16:9": { height: 512, width: 768 },
+      "1:1": { height: 512, width: 512 },
+      "4:3": { height: 512, width: 640 }
     },
     standard: {
       "9:16": { height: 1152, width: 640 },

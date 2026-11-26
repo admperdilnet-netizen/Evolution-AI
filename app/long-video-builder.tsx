@@ -83,15 +83,7 @@ async function wait(ms: number): Promise<void> {
 }
 
 async function generateScene(prompt: string, duration: number, aspectRatio: string, quality: string, seed: number, engine: string): Promise<string> {
-  const requestBody = {
-    prompt,
-    duration,
-    aspectRatio,
-    quality,
-    seed,
-    randomizeSeed: false,
-    projectScene: true
-  };
+  const requestBody = { prompt, duration, aspectRatio, seed };
 
   const send = async () => {
     const response = await fetch("/api/agnes/generate", {
@@ -106,8 +98,8 @@ async function generateScene(prompt: string, duration: number, aspectRatio: stri
         throw new Error("RATE_LIMIT:" + data.error);
       }
       const upstreamError = typeof data.error === "string" ? data.error : "";
-      if (/quota exceeded|exceeded.*quota|zerogpu.*quota|free.*quota/i.test(upstreamError)) {
-        throw new Error("CUOTA_AGOTADA: Hugging Face agotó la cuota gratuita de ZeroGPU. LTX y CogVideoX usan la cuota ZeroGPU de tu cuenta, por lo que cambiar de motor no la recupera. Espera al reinicio de cuota; tus escenas guardadas se conservarán.");
+      if (/quota|limit|rate.?limit|free.*exhausted/i.test(upstreamError)) {
+        throw new Error("AGNES_LIMITE: Agnes AI alcanzó temporalmente el límite de uso gratuito. Tus escenas guardadas se conservarán; espera antes de continuar.");
       }
       throw new Error(upstreamError || "No se pudo generar esta escena.");
     }
@@ -200,8 +192,6 @@ export default function LongVideoBuilder() {
         setPrompt(saved.prompt);
         setTargetSeconds(String(saved.targetSeconds));
         setAspectRatio(saved.aspectRatio);
-        setQuality(saved.quality);
-        setEngine(saved.engine || "ltx");
         if (saved.finalBlob) setVideoUrl(URL.createObjectURL(saved.finalBlob));
       })
       .catch(() => {
@@ -374,14 +364,7 @@ export default function LongVideoBuilder() {
                 <option value="4:3">Clásico 4:3</option>
               </select>
             </div>
-            <div>
-              <label htmlFor="long-quality">Calidad</label>
-              <select id="long-quality" value={quality} onChange={event => setQuality(event.target.value)} disabled={busy}>
-                <option value="economy">Ahorro de cuota</option>
-                <option value="standard">Estándar</option>
-                <option value="high">Alta definición</option>
-              </select>
-            </div>
+            <div><label>Calidad</label><div className="quality-fixed">720p HD · Agnes Video 2.5 Flash</div></div>
           </div>
 
           <div className="long-builder-note">Escenas de 4 segundos en 720p · avance guardado automáticamente.</div>

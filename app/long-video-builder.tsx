@@ -181,7 +181,8 @@ export default function LongVideoBuilder() {
   const [prompt, setPrompt] = useState("");
   const [targetSeconds, setTargetSeconds] = useState("30");
   const [aspectRatio, setAspectRatio] = useState("9:16");
-  const [quality, setQuality] = useState("economy");\n  const [engine, setEngine] = useState("ltx");
+  const [quality, setQuality] = useState("economy");
+  const [engine, setEngine] = useState("ltx");
   const [project, setProject] = useState<LongProject | null>(null);
   const [videoUrl, setVideoUrl] = useState("");
   const [busy, setBusy] = useState(false);
@@ -197,7 +198,8 @@ export default function LongVideoBuilder() {
         setPrompt(saved.prompt);
         setTargetSeconds(String(saved.targetSeconds));
         setAspectRatio(saved.aspectRatio);
-        setQuality(saved.quality);\n        setEngine(saved.engine || "ltx");
+        setQuality(saved.quality);
+        setEngine(saved.engine || "ltx");
         if (saved.finalBlob) setVideoUrl(URL.createObjectURL(saved.finalBlob));
       })
       .catch(() => {
@@ -238,7 +240,8 @@ export default function LongVideoBuilder() {
         activeProject.prompt === text &&
         activeProject.targetSeconds === target &&
         activeProject.aspectRatio === aspectRatio &&
-        activeProject.quality === quality &&\n        activeProject.engine === engine;
+        activeProject.quality === quality &&
+        activeProject.engine === engine;
 
       if (activeProject && !matches) {
         throw new Error("Hay otro proyecto largo guardado. Bórralo con el botón de abajo antes de iniciar otro, para no perder escenas anteriores.");

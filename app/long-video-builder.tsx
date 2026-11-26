@@ -250,6 +250,7 @@ export default function LongVideoBuilder() {
           targetSeconds: target,
           aspectRatio,
           quality,
+          engine,
           seed: Math.floor(Math.random() * 2_000_000_000),
           segments: [],
           updatedAt: Date.now()
@@ -275,7 +276,8 @@ export default function LongVideoBuilder() {
           SCENE_SECONDS,
           activeProject.aspectRatio,
           activeProject.quality,
-          activeProject.seed
+          activeProject.seed,
+          activeProject.engine || engine
         );
 
         setStatus("Descargando y guardando escena " + (index + 1) + " de " + sceneCount + "…");

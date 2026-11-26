@@ -19,12 +19,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Solo se permite descargar archivos de los Spaces oficiales conectados." }, { status: 400 });
   }
 
-  const token = process.env.HF_TOKEN;
-  if (!token) return NextResponse.json({ error: "Falta HF_TOKEN en Vercel." }, { status: 503 });
-
   try {
+    const token = target.hostname === "lightricks-ltx-2-5.hf.space" ? process.env.HF_TOKEN : undefined;
+    if (target.hostname === "lightricks-ltx-2-5.hf.space" && !token) return NextResponse.json({ error: "Falta HF_TOKEN en Vercel." }, { status: 503 });
     const upstream = await fetch(target.toString(), {
-      headers: { Authorization: "Bearer " + token },
+      headers: token ? { Authorization: "Bearer " + token } : {},
       cache: "no-store",
       signal: AbortSignal.timeout(55_000)
     });

@@ -335,9 +335,9 @@ export default function LongVideoBuilder() {
     <section className="long-builder">
       <div className="long-builder-heading">
         <div>
-          <div className="eyebrow">NUEVO · PROYECTOS MULTIESCENA</div>
+          <div className="eyebrow">VIDEO AI</div>
           <h2>Crear un video de <em>{targetSeconds} segundos</em></h2>
-          <p>Se generan clips de 2 segundos, se unen y se ajustan a {targetSeconds} segundos.</p>
+          <p>Generación por clips y montaje automático.</p>
         </div>
         <span className="long-builder-mark">30s+</span>
       </div>
@@ -384,13 +384,10 @@ export default function LongVideoBuilder() {
             </div>
           </div>
 
-          <div className="long-builder-note">
-            LTX-2.5 y CogVideoX usan cuota ZeroGPU de Hugging Face vinculada a tu cuenta; cambiar entre ellos no evita que se agote. Cada clip generado dura 2 segundos. Las escenas terminadas se guardan automáticamente para continuar más tarde. Para tener un respaldo real necesitamos conectar un proveedor externo gratuito con su propia cuota (por ejemplo Agnes, que requiere una clave API).
-            La cuota gratuita puede limitar cuántos segmentos se generan cada día.
-          </div>
+          <div className="long-builder-note">Clips de 2 segundos · avance guardado automáticamente.</div>
 
           <button className="generate" type="button" onClick={createLongVideo} disabled={busy}>
-            {busy ? "CREANDO ESCENAS…" : "GENERAR / CONTINUAR VIDEO LARGO"} <b>{busy ? "…" : "↗"}</b>
+            {busy ? "CREANDO ESCENAS…" : "CREAR VIDEO"} <b>{busy ? "…" : "↗"}</b>
           </button>
 
           {project && (
@@ -422,8 +419,8 @@ export default function LongVideoBuilder() {
           ) : (
             <div className="empty">
               <div className="orb"><span>✦</span></div>
-              <h3>{busy ? "Preparando tu película" : "Tu video largo aparecerá aquí"}</h3>
-              <p>{busy ? "Se generan clips de 2 segundos, se unen y se recortan a la duración elegida." : "Se generan " + sceneCount + " segmentos de 5 segundos y se unen en un MP4 de " + targetSeconds + " segundos."}</p>
+              <h3>{busy ? "Preparando tu película" : "Tu video aparecerá aquí"}</h3>
+              <p>{busy ? "Creando y ensamblando tu video." : "Tu video terminado aparecerá aquí."}</p>
             </div>
           )}
         </div>

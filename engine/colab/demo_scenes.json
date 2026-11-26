@@ -1,0 +1,15 @@
+{
+  "width": 832,
+  "height": 480,
+  "num_frames": 33,
+  "fps": 16,
+  "steps": 20,
+  "guidance_scale": 5,
+  "seed": 20261126,
+  "min_vram_gb": 12,
+  "negative_prompt": "low quality, blurry, flicker, frozen motion, distorted anatomy, extra limbs, duplicate subjects, text, subtitles, logo, watermark",
+  "scenes": [
+    "Cinematic wide shot of a Dominican coastal village at sunrise, colorful houses beside the Caribbean sea, palm trees moving gently in the ocean breeze, warm golden light, realistic documentary cinematography, smooth natural camera movement.",
+    "Continue the same Caribbean coastal village at sunrise, the camera glides closer to the palm-lined shore as gentle waves reach the sand, same warm golden light and realistic documentary cinematography, smooth natural motion."
+  ]
+}

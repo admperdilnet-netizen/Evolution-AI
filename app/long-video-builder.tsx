@@ -17,8 +17,8 @@ type LongProject = {
 
 const DB_NAME = "evolution-ai-long-projects";
 const STORE_NAME = "projects";
-const PROJECT_KEY = "active-2s";
-const SCENE_SECONDS = 2;
+const PROJECT_KEY = "active-agnes-4s";
+const SCENE_SECONDS = 4;
 
 function openDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -64,17 +64,17 @@ async function deleteProject(): Promise<void> {
 }
 
 function scenePrompt(base: string, index: number, count: number): string {
-  const mainScene = Math.floor(index / 3) + 1;
-  const segmentInScene = (index % 3) + 1;
+  const mainScene = Math.floor(index / 4) + 1;
+  const segmentInScene = (index % 4) + 1;
   const direction = index === 0
     ? "Opening segment: establish the place, main characters, clothing, visual style and mood."
     : index === count - 1
       ? "Closing segment: continue the action and bring the story to a natural conclusion."
       : segmentInScene === 1
-        ? "Begin the next 15-second story chapter, continuing from the previous chapter."
+        ? "Begin the next 16-second story chapter, continuing from the previous chapter."
         : "Continuation segment: show the next moment without restarting the story.";
   return base.trim() +
-    "\n\nThis is segment " + (index + 1) + " of " + count + ", within main story scene " + mainScene + " (segment " + segmentInScene + " of 3), in one continuous film. " + direction +
+    "\n\nThis is segment " + (index + 1) + " of " + count + ", within main story scene " + mainScene + " (segment " + segmentInScene + " of 4), in one continuous film. " + direction +
     " Preserve the same characters, faces, clothing, location, props, lighting, color grade, camera style and atmosphere. Do not introduce unrelated protagonists. Make it feel like the next moment in the same film. No captions, titles, logos or watermarks.";
 }
 
@@ -94,7 +94,7 @@ async function generateScene(prompt: string, duration: number, aspectRatio: stri
   };
 
   const send = async () => {
-    const response = await fetch(engine === "cogvideo" ? "/api/cogvideo/generate" : "/api/generate", {
+    const response = await fetch("/api/agnes/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(requestBody),
@@ -133,7 +133,7 @@ async function downloadScene(videoUrl: string): Promise<Blob> {
     throw new Error(data.error || "No se pudo guardar el segmento generado.");
   }
   const blob = await response.blob();
-  if (!blob.size) throw new Error("Hugging Face devolvió un archivo vacío.");
+  if (!blob.size) throw new Error("Agnes AI devolvió un archivo de video vacío.");
   return blob;
 }
 
@@ -183,8 +183,8 @@ export default function LongVideoBuilder() {
   const [prompt, setPrompt] = useState("");
   const [targetSeconds, setTargetSeconds] = useState("15");
   const [aspectRatio, setAspectRatio] = useState("9:16");
-  const [quality, setQuality] = useState("economy");
-  const [engine, setEngine] = useState("ltx");
+  const quality = "720P";
+  const engine = "agnes";
   const [project, setProject] = useState<LongProject | null>(null);
   const [videoUrl, setVideoUrl] = useState("");
   const [busy, setBusy] = useState(false);
@@ -218,7 +218,7 @@ export default function LongVideoBuilder() {
   const target = Number(targetSeconds);
   const sceneCount = Math.ceil(target / SCENE_SECONDS);
   const completed = project?.segments.length || 0;
-  const progress = project ? Math.min(100, Math.round(completed / (project.targetSeconds / SCENE_SECONDS) * 100)) : 0;
+  const progress = project ? Math.min(100, Math.round(completed / Math.ceil(project.targetSeconds / SCENE_SECONDS) * 100)) : 0;
 
   async function createLongVideo() {
     const text = prompt.trim();
@@ -355,14 +355,14 @@ export default function LongVideoBuilder() {
           />
           <div className="counter">{prompt.length}/1250</div>
 
-          <div className="long-builder-settings">\n            <div>\n              <label htmlFor="long-engine">Motor de video</label>\n              <select id="long-engine" value={engine} onChange={event => setEngine(event.target.value)} disabled={busy}>\n                <option value="ltx">LTX-2.5 · principal</option>\n                <option value="cogvideo">CogVideoX-2B · alternativo</option>\n              </select>\n            </div>
+          <div className="long-builder-settings">
             <div>
               <label htmlFor="long-target">Duración final</label>
               <select id="long-target" value={targetSeconds} onChange={event => setTargetSeconds(event.target.value)} disabled={busy}>
-                <option value="15">15 segundos · clips de 2s</option>
-                <option value="30">30 segundos · clips de 2s</option>
-                <option value="45">45 segundos · clips de 2s</option>
-                <option value="60">60 segundos · clips de 2s</option>
+                <option value="15">15 segundos · escenas de 4s</option>
+                <option value="30">30 segundos · escenas de 4s</option>
+                <option value="45">45 segundos · escenas de 4s</option>
+                <option value="60">60 segundos · escenas de 4s</option>
               </select>
             </div>
             <div>
@@ -384,7 +384,7 @@ export default function LongVideoBuilder() {
             </div>
           </div>
 
-          <div className="long-builder-note">Clips de 2 segundos · avance guardado automáticamente.</div>
+          <div className="long-builder-note">Escenas de 4 segundos en 720p · avance guardado automáticamente.</div>
 
           <button className="generate" type="button" onClick={createLongVideo} disabled={busy}>
             {busy ? "CREANDO ESCENAS…" : "CREAR VIDEO"} <b>{busy ? "…" : "↗"}</b>
@@ -394,7 +394,7 @@ export default function LongVideoBuilder() {
             <div className="long-builder-progress">
               <div className="long-builder-progress-head">
                 <strong>Proyecto guardado</strong>
-                <span>{completed}/{project.targetSeconds / SCENE_SECONDS} escenas</span>
+                <span>{completed}/{Math.ceil(project.targetSeconds / SCENE_SECONDS)} escenas</span>
               </div>
               <div className="progress-track"><span style={{ width: progress + "%" }} /></div>
               <button className="clear-project" type="button" onClick={clearSavedProject} disabled={busy}>Borrar proyecto guardado</button>

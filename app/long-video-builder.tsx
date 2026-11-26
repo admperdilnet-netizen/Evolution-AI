@@ -64,13 +64,17 @@ async function deleteProject(): Promise<void> {
 }
 
 function scenePrompt(base: string, index: number, count: number): string {
+  const mainScene = Math.floor(index / 6) + 1;
+  const segmentInScene = (index % 6) + 1;
   const direction = index === 0
-    ? "Opening scene: establish the place, main characters, their clothing, visual style and mood."
+    ? "Opening segment: establish the place, main characters, clothing, visual style and mood."
     : index === count - 1
-      ? "Final scene: continue the same action and bring the story to a natural conclusion."
-      : "Continuation scene: show the next moment of the same action without restarting the story.";
+      ? "Closing segment: continue the action and bring the story to a natural conclusion."
+      : segmentInScene === 1
+        ? "Begin the next 30-second story chapter, continuing from the previous chapter."
+        : "Continuation segment: show the next moment without restarting the story.";
   return base.trim() +
-    "\n\nThis is scene " + (index + 1) + " of " + count + " in one continuous film. " + direction +
+    "\n\nThis is segment " + (index + 1) + " of " + count + ", within main story scene " + mainScene + " (segment " + segmentInScene + " of 6), in one continuous film. " + direction +
     " Preserve the same characters, faces, clothing, location, props, lighting, color grade, camera style and atmosphere. Do not introduce unrelated protagonists. Make it feel like the next moment in the same film. No captions, titles, logos or watermarks.";
 }
 
@@ -180,7 +184,7 @@ async function mergeScenes(scenes: LongScene[], report: (message: string) => voi
 
 export default function LongVideoBuilder() {
   const [prompt, setPrompt] = useState("");
-  const [targetSeconds, setTargetSeconds] = useState("30");
+  const [targetSeconds, setTargetSeconds] = useState("60");
   const [aspectRatio, setAspectRatio] = useState("9:16");
   const [quality, setQuality] = useState("economy");
   const [engine, setEngine] = useState("ltx");
@@ -335,8 +339,8 @@ export default function LongVideoBuilder() {
       <div className="long-builder-heading">
         <div>
           <div className="eyebrow">NUEVO · PROYECTOS MULTIESCENA</div>
-          <h2>Crear un video de <em>30 a 60 segundos</em></h2>
-          <p>Evolution AI genera clips conectados y los une automáticamente en un solo MP4.</p>
+          <h2>Crear un video de <em>2 escenas de 30 segundos</em></h2>
+          <p>Cada escena principal dura 30 segundos. El motor crea segmentos cortos consecutivos y los une; después une las 2 escenas en un MP4 de 60 segundos.</p>
         </div>
         <span className="long-builder-mark">30s+</span>
       </div>
@@ -358,9 +362,9 @@ export default function LongVideoBuilder() {
             <div>
               <label htmlFor="long-target">Duración final</label>
               <select id="long-target" value={targetSeconds} onChange={event => setTargetSeconds(event.target.value)} disabled={busy}>
-                <option value="30">30 segundos · 6 escenas</option>
-                <option value="45">45 segundos · 9 escenas</option>
-                <option value="60">60 segundos · 12 escenas</option>
+                <option value="60">60 segundos · 2 escenas de 30s (12 segmentos)</option>
+                <option value="90">90 segundos · 2 escenas de 45s (18 segmentos)</option>
+                <option value="120">120 segundos · 2 escenas de 60s (24 segmentos)</option>
               </select>
             </div>
             <div>
@@ -421,7 +425,7 @@ export default function LongVideoBuilder() {
             <div className="empty">
               <div className="orb"><span>✦</span></div>
               <h3>{busy ? "Preparando tu película" : "Tu video largo aparecerá aquí"}</h3>
-              <p>{busy ? "Las escenas se generan una por una y se guardan al terminar." : "Cuando se completen todas las escenas, se unirán en un archivo MP4."}</p>
+              <p>{busy ? "Se generan segmentos de 5 segundos para completar cada escena de 30 segundos y luego se unen." : "Dos escenas principales de 30 segundos se construyen con segmentos cortos y se unen en un MP4 de 60 segundos."}</p>
             </div>
           )}
         </div>

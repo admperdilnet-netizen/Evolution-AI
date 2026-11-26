@@ -17,7 +17,7 @@ type LongProject = {
 
 const DB_NAME = "evolution-ai-long-projects";
 const STORE_NAME = "projects";
-const PROJECT_KEY = "active-agnes-4s";
+const PROJECT_KEY = "active-magichour-4s";
 const SCENE_SECONDS = 4;
 
 function openDb(): Promise<IDBDatabase> {
@@ -82,7 +82,7 @@ async function generateScene(prompt: string, duration: number, aspectRatio: stri
   const requestBody = { prompt, duration, aspectRatio, seed };
 
   const send = async () => {
-    const response = await fetch("/api/agnes/generate", {
+    const response = await fetch("/api/magichour/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(requestBody),
@@ -90,14 +90,8 @@ async function generateScene(prompt: string, duration: number, aspectRatio: stri
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
-      if (response.status === 429) {
-        throw new Error("AGNES_LIMITE: " + (typeof data.error === "string" ? data.error : "Agnes AI alcanzó su límite temporal de solicitudes. Tus escenas guardadas se conservarán."));
-      }
       const upstreamError = typeof data.error === "string" ? data.error : "";
-      if (/quota|limit|l[ií]mite|rate.?limit|free.*exhausted/i.test(upstreamError)) {
-        throw new Error("AGNES_LIMITE: Agnes AI alcanzó temporalmente el límite de uso gratuito. Tus escenas guardadas se conservarán; espera antes de continuar.");
-      }
-      throw new Error(upstreamError || "No se pudo generar esta escena.");
+      throw new Error(upstreamError || "No se pudo generar esta escena en Magic Hour.");
     }
     if (typeof data.videoUrl !== "string") throw new Error("El motor no devolvió el archivo de video.");
     return data.videoUrl as string;
@@ -113,7 +107,7 @@ async function downloadScene(videoUrl: string): Promise<Blob> {
     throw new Error(data.error || "No se pudo guardar el segmento generado.");
   }
   const blob = await response.blob();
-  if (!blob.size) throw new Error("Agnes AI devolvió un archivo de video vacío.");
+  if (!blob.size) throw new Error("Magic Hour devolvió un archivo de video vacío.");
   return blob;
 }
 
@@ -163,8 +157,8 @@ export default function LongVideoBuilder() {
   const [prompt, setPrompt] = useState("");
   const [targetSeconds, setTargetSeconds] = useState("15");
   const [aspectRatio, setAspectRatio] = useState("9:16");
-  const quality = "720P";
-  const engine = "agnes";
+  const quality = "480p";
+  const engine = "magic-hour";
   const [project, setProject] = useState<LongProject | null>(null);
   const [videoUrl, setVideoUrl] = useState("");
   const [busy, setBusy] = useState(false);
@@ -349,13 +343,13 @@ export default function LongVideoBuilder() {
                 <option value="9:16">Vertical 9:16</option>
                 <option value="16:9">Horizontal 16:9</option>
                 <option value="1:1">Cuadrado 1:1</option>
-                <option value="4:3">Clásico 4:3</option>
+                
               </select>
             </div>
-            <div><label>Calidad</label><div className="quality-fixed">720p HD · Agnes Video 2.5 Flash</div></div>
+            <div><label>Calidad</label><div className="quality-fixed">480p · Magic Hour LTX-2.5</div></div>
           </div>
 
-          <div className="long-builder-note">Escenas de 4 segundos en 720p · avance guardado automáticamente.</div>
+          <div className="long-builder-note">Escenas de 4 segundos en 480p · Magic Hour · avance guardado automáticamente.</div>
 
           <button className="generate" type="button" onClick={createLongVideo} disabled={busy}>
             {busy ? "CREANDO ESCENAS…" : "CREAR VIDEO"} <b>{busy ? "…" : "↗"}</b>

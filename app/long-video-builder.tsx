@@ -17,8 +17,8 @@ type LongProject = {
 
 const DB_NAME = "evolution-ai-long-projects";
 const STORE_NAME = "projects";
-const PROJECT_KEY = "active";
-const SCENE_SECONDS = 5;
+const PROJECT_KEY = "active-2s";
+const SCENE_SECONDS = 2;
 
 function openDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -137,7 +137,7 @@ async function downloadScene(videoUrl: string): Promise<Blob> {
   return blob;
 }
 
-async function mergeScenes(scenes: LongScene[], report: (message: string) => void): Promise<Blob> {
+async function mergeScenes(scenes: LongScene[], targetSeconds: number, report: (message: string) => void): Promise<Blob> {
   const { FFmpeg } = await import("@ffmpeg/ffmpeg");
   const { toBlobURL } = await import("@ffmpeg/util");
   const ffmpeg = new FFmpeg();
@@ -223,7 +223,7 @@ export default function LongVideoBuilder() {
   }, [videoUrl]);
 
   const target = Number(targetSeconds);
-  const sceneCount = target / SCENE_SECONDS;
+  const sceneCount = Math.ceil(target / SCENE_SECONDS);
   const completed = project?.segments.length || 0;
   const progress = project ? Math.min(100, Math.round(completed / (project.targetSeconds / SCENE_SECONDS) * 100)) : 0;
 
@@ -305,7 +305,7 @@ export default function LongVideoBuilder() {
         throw new Error("Todavía faltan escenas. El avance está guardado; vuelve a continuar cuando haya cuota gratuita.");
       }
 
-      const finalBlob = await mergeScenes(activeProject.segments, setStatus);
+      const finalBlob = await mergeScenes(activeProject.segments, target, setStatus);
       activeProject.finalBlob = finalBlob;
       activeProject.updatedAt = Date.now();
       await saveProject(activeProject);
@@ -344,7 +344,7 @@ export default function LongVideoBuilder() {
         <div>
           <div className="eyebrow">NUEVO · PROYECTOS MULTIESCENA</div>
           <h2>Crear un video de <em>{targetSeconds} segundos</em></h2>
-          <p>Se generan {sceneCount} segmentos consecutivos de 5 segundos y se unen en un solo video de {targetSeconds} segundos.</p>
+          <p>Se generan clips de 2 segundos, se unen y se ajustan a {targetSeconds} segundos.</p>
         </div>
         <span className="long-builder-mark">30s+</span>
       </div>
@@ -366,10 +366,10 @@ export default function LongVideoBuilder() {
             <div>
               <label htmlFor="long-target">Duración final</label>
               <select id="long-target" value={targetSeconds} onChange={event => setTargetSeconds(event.target.value)} disabled={busy}>
-                <option value="15">15 segundos · 3 segmentos de 5s</option>
-                <option value="30">30 segundos · 6 segmentos de 5s</option>
-                <option value="45">45 segundos · 9 segmentos de 5s</option>
-                <option value="60">60 segundos · 12 segmentos de 5s</option>
+                <option value="15">15 segundos · clips de 2s</option>
+                <option value="30">30 segundos · clips de 2s</option>
+                <option value="45">45 segundos · clips de 2s</option>
+                <option value="60">60 segundos · clips de 2s</option>
               </select>
             </div>
             <div>
@@ -392,7 +392,7 @@ export default function LongVideoBuilder() {
           </div>
 
           <div className="long-builder-note">
-            LTX-2.5 y CogVideoX usan cuota ZeroGPU de Hugging Face vinculada a tu cuenta; cambiar entre ellos no evita que se agote. Cada segmento dura 5 segundos. Las escenas terminadas se guardan automáticamente para continuar más tarde. Para tener un respaldo real necesitamos conectar un proveedor externo gratuito con su propia cuota (por ejemplo Agnes, que requiere una clave API).
+            LTX-2.5 y CogVideoX usan cuota ZeroGPU de Hugging Face vinculada a tu cuenta; cambiar entre ellos no evita que se agote. Cada clip generado dura 2 segundos. Las escenas terminadas se guardan automáticamente para continuar más tarde. Para tener un respaldo real necesitamos conectar un proveedor externo gratuito con su propia cuota (por ejemplo Agnes, que requiere una clave API).
             La cuota gratuita puede limitar cuántos segmentos se generan cada día.
           </div>
 
@@ -430,7 +430,7 @@ export default function LongVideoBuilder() {
             <div className="empty">
               <div className="orb"><span>✦</span></div>
               <h3>{busy ? "Preparando tu película" : "Tu video largo aparecerá aquí"}</h3>
-              <p>{busy ? "Se generan segmentos de 5 segundos y luego se unen." : "Se generan " + sceneCount + " segmentos de 5 segundos y se unen en un MP4 de " + targetSeconds + " segundos."}</p>
+              <p>{busy ? "Se generan clips de 2 segundos, se unen y se recortan a la duración elegida." : "Se generan " + sceneCount + " segmentos de 5 segundos y se unen en un MP4 de " + targetSeconds + " segundos."}</p>
             </div>
           )}
         </div>

@@ -1,0 +1,8 @@
+# Keep the notebook's preinstalled PyTorch/CUDA build; do not reinstall torch.
+diffusers>=0.33.1
+transformers>=4.49.0
+accelerate>=1.2.0
+ftfy
+imageio[ffmpeg]
+sentencepiece
+safetensors

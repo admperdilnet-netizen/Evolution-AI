@@ -3,9 +3,9 @@ export const runtime = "nodejs";
 export const maxDuration = 300;
 const SPACE_URL = "https://zai-org-cogvideox-2b-space.hf.space";
 function parseSse(raw: string): unknown {
-  for (const block of raw.split(/\\r?\\n\\r?\\n/)) {
+  for (const block of raw.split(/\r?\n\r?\n/)) {
     const event = block.match(/^event:\\s*(.+)$/m)?.[1]?.trim();
-    const data = block.split(/\\r?\\n/).filter(line => line.startsWith("data:")).map(line => line.slice(5).trim()).join("\\n");
+    const data = block.split(/\r?\n/).filter(line => line.startsWith("data:")).map(line => line.slice(5).trim()).join("\n");
     if (!data) continue;
     if (event === "error") throw new Error(data);
     if (event === "complete") return JSON.parse(data);

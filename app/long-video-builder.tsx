@@ -77,7 +77,7 @@ async function wait(ms: number): Promise<void> {
   await new Promise(resolve => window.setTimeout(resolve, ms));
 }
 
-async function generateScene(prompt: string, duration: number, aspectRatio: string, quality: string, seed: number): Promise<string> {
+async function generateScene(prompt: string, duration: number, aspectRatio: string, quality: string, seed: number, engine: string): Promise<string> {
   const requestBody = {
     prompt,
     duration,
@@ -89,7 +89,7 @@ async function generateScene(prompt: string, duration: number, aspectRatio: stri
   };
 
   const send = async () => {
-    const response = await fetch("/api/generate", {
+    const response = await fetch(engine === "cogvideo" ? "/api/cogvideo/generate" : "/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(requestBody),
@@ -181,7 +181,7 @@ export default function LongVideoBuilder() {
   const [prompt, setPrompt] = useState("");
   const [targetSeconds, setTargetSeconds] = useState("30");
   const [aspectRatio, setAspectRatio] = useState("9:16");
-  const [quality, setQuality] = useState("economy");
+  const [quality, setQuality] = useState("economy");\n  const [engine, setEngine] = useState("ltx");
   const [project, setProject] = useState<LongProject | null>(null);
   const [videoUrl, setVideoUrl] = useState("");
   const [busy, setBusy] = useState(false);
@@ -197,7 +197,7 @@ export default function LongVideoBuilder() {
         setPrompt(saved.prompt);
         setTargetSeconds(String(saved.targetSeconds));
         setAspectRatio(saved.aspectRatio);
-        setQuality(saved.quality);
+        setQuality(saved.quality);\n        setEngine(saved.engine || "ltx");
         if (saved.finalBlob) setVideoUrl(URL.createObjectURL(saved.finalBlob));
       })
       .catch(() => {
@@ -238,7 +238,7 @@ export default function LongVideoBuilder() {
         activeProject.prompt === text &&
         activeProject.targetSeconds === target &&
         activeProject.aspectRatio === aspectRatio &&
-        activeProject.quality === quality;
+        activeProject.quality === quality &&\n        activeProject.engine === engine;
 
       if (activeProject && !matches) {
         throw new Error("Hay otro proyecto largo guardado. Bórralo con el botón de abajo antes de iniciar otro, para no perder escenas anteriores.");
@@ -348,7 +348,7 @@ export default function LongVideoBuilder() {
           />
           <div className="counter">{prompt.length}/1250</div>
 
-          <div className="long-builder-settings">
+          <div className="long-builder-settings">\n            <div>\n              <label htmlFor="long-engine">Motor de video</label>\n              <select id="long-engine" value={engine} onChange={event => setEngine(event.target.value)} disabled={busy}>\n                <option value="ltx">LTX-2.5 · principal</option>\n                <option value="cogvideo">CogVideoX-2B · alternativo</option>\n              </select>\n            </div>
             <div>
               <label htmlFor="long-target">Duración final</label>
               <select id="long-target" value={targetSeconds} onChange={event => setTargetSeconds(event.target.value)} disabled={busy}>
@@ -377,7 +377,7 @@ export default function LongVideoBuilder() {
           </div>
 
           <div className="long-builder-note">
-            Cada escena dura 5 segundos. Los segmentos se guardan automáticamente y puedes continuar otro día en este mismo navegador.
+            CogVideoX es una demo pública con cuota variable y formato fijo; sus clips pueden salir horizontales. Cada escena dura 5 segundos solicitados para el proyecto. Los segmentos se guardan automáticamente y puedes continuar otro día en este mismo navegador.
             Con la cuota gratuita, un proyecto de 30 segundos puede requerir varios días.
           </div>
 

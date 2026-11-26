@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-const ALLOWED_HOST = "lightricks-ltx-2-5.hf.space";
+const ALLOWED_HOSTS = ["lightricks-ltx-2-5.hf.space", "zai-org-cogvideox-2b-space.hf.space"];
 
 export async function GET(request: NextRequest) {
   const rawUrl = request.nextUrl.searchParams.get("url") || "";
@@ -13,10 +13,10 @@ export async function GET(request: NextRequest) {
 
   if (
     target.protocol !== "https:" ||
-    target.hostname !== ALLOWED_HOST ||
+    !ALLOWED_HOSTS.includes(target.hostname) ||
     !target.pathname.startsWith("/gradio_api/file=")
   ) {
-    return NextResponse.json({ error: "Solo se permite descargar archivos del Space oficial de LTX-2.5." }, { status: 400 });
+    return NextResponse.json({ error: "Solo se permite descargar archivos de los Spaces oficiales conectados." }, { status: 400 });
   }
 
   const token = process.env.HF_TOKEN;

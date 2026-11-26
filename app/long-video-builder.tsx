@@ -64,17 +64,17 @@ async function deleteProject(): Promise<void> {
 }
 
 function scenePrompt(base: string, index: number, count: number): string {
-  const mainScene = Math.floor(index / 6) + 1;
-  const segmentInScene = (index % 6) + 1;
+  const mainScene = Math.floor(index / 3) + 1;
+  const segmentInScene = (index % 3) + 1;
   const direction = index === 0
     ? "Opening segment: establish the place, main characters, clothing, visual style and mood."
     : index === count - 1
       ? "Closing segment: continue the action and bring the story to a natural conclusion."
       : segmentInScene === 1
-        ? "Begin the next 30-second story chapter, continuing from the previous chapter."
+        ? "Begin the next 15-second story chapter, continuing from the previous chapter."
         : "Continuation segment: show the next moment without restarting the story.";
   return base.trim() +
-    "\n\nThis is segment " + (index + 1) + " of " + count + ", within main story scene " + mainScene + " (segment " + segmentInScene + " of 6), in one continuous film. " + direction +
+    "\n\nThis is segment " + (index + 1) + " of " + count + ", within main story scene " + mainScene + " (segment " + segmentInScene + " of 3), in one continuous film. " + direction +
     " Preserve the same characters, faces, clothing, location, props, lighting, color grade, camera style and atmosphere. Do not introduce unrelated protagonists. Make it feel like the next moment in the same film. No captions, titles, logos or watermarks.";
 }
 
@@ -184,7 +184,7 @@ async function mergeScenes(scenes: LongScene[], report: (message: string) => voi
 
 export default function LongVideoBuilder() {
   const [prompt, setPrompt] = useState("");
-  const [targetSeconds, setTargetSeconds] = useState("60");
+  const [targetSeconds, setTargetSeconds] = useState("15");
   const [aspectRatio, setAspectRatio] = useState("9:16");
   const [quality, setQuality] = useState("economy");
   const [engine, setEngine] = useState("ltx");
@@ -339,8 +339,8 @@ export default function LongVideoBuilder() {
       <div className="long-builder-heading">
         <div>
           <div className="eyebrow">NUEVO · PROYECTOS MULTIESCENA</div>
-          <h2>Crear un video de <em>2 escenas de 30 segundos</em></h2>
-          <p>Cada escena principal dura 30 segundos. El motor crea segmentos cortos consecutivos y los une; después une las 2 escenas en un MP4 de 60 segundos.</p>
+          <h2>Crear un video de <em>15 segundos</em></h2>
+          <p>Se generan 3 segmentos consecutivos de 5 segundos y se unen en un solo video de 15 segundos.</p>
         </div>
         <span className="long-builder-mark">30s+</span>
       </div>
@@ -362,9 +362,9 @@ export default function LongVideoBuilder() {
             <div>
               <label htmlFor="long-target">Duración final</label>
               <select id="long-target" value={targetSeconds} onChange={event => setTargetSeconds(event.target.value)} disabled={busy}>
-                <option value="60">60 segundos · 2 escenas de 30s (12 segmentos)</option>
-                <option value="90">90 segundos · 2 escenas de 45s (18 segmentos)</option>
-                <option value="120">120 segundos · 2 escenas de 60s (24 segmentos)</option>
+                <option value="15">15 segundos · 3 segmentos de 5s</option>
+                <option value="30">30 segundos · 6 segmentos de 5s</option>
+                <option value="45">45 segundos · 9 segmentos de 5s</option>
               </select>
             </div>
             <div>
@@ -387,8 +387,8 @@ export default function LongVideoBuilder() {
           </div>
 
           <div className="long-builder-note">
-            CogVideoX es una demo pública con cuota variable y formato fijo; sus clips pueden salir horizontales. Cada escena dura 5 segundos solicitados para el proyecto. Los segmentos se guardan automáticamente y puedes continuar otro día en este mismo navegador.
-            Con la cuota gratuita, un proyecto de 30 segundos puede requerir varios días.
+            CogVideoX es una demo pública con cuota variable y formato fijo; sus clips pueden salir horizontales. Cada segmento dura 5 segundos. Los segmentos se guardan automáticamente y puedes continuar otro día en este mismo navegador.
+            Con la cuota gratuita, los proyectos largos pueden requerir varios días.
           </div>
 
           <button className="generate" type="button" onClick={createLongVideo} disabled={busy}>
@@ -425,7 +425,7 @@ export default function LongVideoBuilder() {
             <div className="empty">
               <div className="orb"><span>✦</span></div>
               <h3>{busy ? "Preparando tu película" : "Tu video largo aparecerá aquí"}</h3>
-              <p>{busy ? "Se generan segmentos de 5 segundos para completar cada escena de 30 segundos y luego se unen." : "Dos escenas principales de 30 segundos se construyen con segmentos cortos y se unen en un MP4 de 60 segundos."}</p>
+              <p>{busy ? "Se generan segmentos de 5 segundos y luego se unen." : "Tres segmentos de 5 segundos se unen en un MP4 de 15 segundos."}</p>
             </div>
           )}
         </div>

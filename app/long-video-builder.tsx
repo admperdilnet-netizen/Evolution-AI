@@ -343,8 +343,8 @@ export default function LongVideoBuilder() {
       <div className="long-builder-heading">
         <div>
           <div className="eyebrow">NUEVO · PROYECTOS MULTIESCENA</div>
-          <h2>Crear un video de <em>15 segundos</em></h2>
-          <p>Se generan 3 segmentos consecutivos de 5 segundos y se unen en un solo video de 15 segundos.</p>
+          <h2>Crear un video de <em>{targetSeconds} segundos</em></h2>
+          <p>Se generan {sceneCount} segmentos consecutivos de 5 segundos y se unen en un solo video de {targetSeconds} segundos.</p>
         </div>
         <span className="long-builder-mark">30s+</span>
       </div>
@@ -369,6 +369,7 @@ export default function LongVideoBuilder() {
                 <option value="15">15 segundos · 3 segmentos de 5s</option>
                 <option value="30">30 segundos · 6 segmentos de 5s</option>
                 <option value="45">45 segundos · 9 segmentos de 5s</option>
+                <option value="60">60 segundos · 12 segmentos de 5s</option>
               </select>
             </div>
             <div>
@@ -429,7 +430,7 @@ export default function LongVideoBuilder() {
             <div className="empty">
               <div className="orb"><span>✦</span></div>
               <h3>{busy ? "Preparando tu película" : "Tu video largo aparecerá aquí"}</h3>
-              <p>{busy ? "Se generan segmentos de 5 segundos y luego se unen." : "Tres segmentos de 5 segundos se unen en un MP4 de 15 segundos."}</p>
+              <p>{busy ? "Se generan segmentos de 5 segundos y luego se unen." : "Se generan " + sceneCount + " segmentos de 5 segundos y se unen en un MP4 de " + targetSeconds + " segundos."}</p>
             </div>
           )}
         </div>

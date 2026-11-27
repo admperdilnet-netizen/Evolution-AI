@@ -1,21 +1,21 @@
 "use client";
-
-import LongVideoBuilder from "./long-video-builder";
-
-export default function Home() {
-  return (
-    <main className="shell">
-      <nav className="topbar">
-        <a className="brand" href="#"><span className="brand-mark">E</span><span>EVOLUTION <b>AI</b></span></a>
-        
-      </nav>
-      <section className="hero">
-        
-        <h1><em>Evolution AI</em></h1>
-        
-      </section>
-      <LongVideoBuilder />
-      <footer><span>EVOLUTION AI</span></footer>
-    </main>
-  );
+import { useEffect, useState } from "react";
+type Profile={gender:string;name:string;personality:string;language:string};
+type Message={role:"assistant"|"user";text:string};
+const personalities=["Cariñosa","Romántica","Divertida","Coqueta","Tranquila","Personalizada"];
+export default function Home(){
+ const [stage,setStage]=useState(0),[gender,setGender]=useState("Mujer"),[name,setName]=useState(""),[personality,setPersonality]=useState("Cariñosa"),[language,setLanguage]=useState("Auto"),[profile,setProfile]=useState<Profile|null>(null),[messages,setMessages]=useState<Message[]>([]),[input,setInput]=useState(""),[memories,setMemories]=useState<string[]>([]),[memory,setMemory]=useState("");
+ useEffect(()=>{try{const p=localStorage.getItem("vinculo-profile");if(p){setProfile(JSON.parse(p));setStage(3)}const m=localStorage.getItem("vinculo-messages");if(m)setMessages(JSON.parse(m));const mm=localStorage.getItem("vinculo-memories");if(mm)setMemories(JSON.parse(mm))}catch{}},[]);
+ useEffect(()=>{localStorage.setItem("vinculo-messages",JSON.stringify(messages))},[messages]);
+ useEffect(()=>{localStorage.setItem("vinculo-memories",JSON.stringify(memories))},[memories]);
+ function finish(){const p={gender,name:name.trim()||"Alex",personality,language};setProfile(p);localStorage.setItem("vinculo-profile",JSON.stringify(p));setStage(3);setMessages([{role:"assistant",text:"Hola ❤️ Soy "+p.name+". Este es nuestro espacio. Puedes conversar conmigo, organizar tus ideas, aprender, planificar o investigar temas. En este prototipo, las respuestas aún no están conectadas a un motor de IA real."}])}
+ function send(){if(!input.trim())return;setMessages(v=>[...v,{role:"user",text:input.trim()},{role:"assistant",text:"He recibido tu mensaje. El chat de Vínculo está en modo prototipo; la conexión con el motor de IA se integrará en la siguiente etapa."}]);setInput("")}
+ function reset(){localStorage.removeItem("vinculo-profile");localStorage.removeItem("vinculo-messages");setProfile(null);setMessages([]);setStage(0)}
+ return <main className="v-shell"><header className="v-header"><div className="v-logo">♡</div><div><b>VÍNCULO</b><small>Un espacio para conectar</small></div>{stage===3&&<button className="v-reset" onClick={reset}>Configuración</button>}</header>
+ {stage<3?<section className="v-card"><div className="v-step">CREANDO TU COMPAÑÍA · {stage+1}/3</div><div className="v-progress"><i style={{width:((stage+1)/3*100)+"%"}}/></div>
+ {stage===0&&<><h1>¿Qué compañía<br/><em>quieres crear?</em></h1><p>Elige cómo será tu compañero virtual.</p><div className="v-options">{["Mujer","Hombre","Otro"].map(x=><button className={gender===x?"selected":""} onClick={()=>setGender(x)} key={x}>{x==="Mujer"?"♀":x==="Hombre"?"♂":"✧"}<span>{x}</span></button>)}</div></>}
+ {stage===1&&<><h1>¿Cómo se<br/><em>llamará?</em></h1><p>El nombre que elijas será su identidad en Vínculo.</p><input className="v-input" value={name} onChange={e=>setName(e.target.value)} placeholder="Escribe un nombre" maxLength={30}/></>}
+ {stage===2&&<><h1>Elige su<br/><em>personalidad</em></h1><p>Podrás cambiarla más adelante.</p><div className="v-personas">{personalities.map(x=><button className={personality===x?"selected":""} key={x} onClick={()=>setPersonality(x)}>{x}</button>)}</div><label className="v-label">Idioma</label><select className="v-input" value={language} onChange={e=>setLanguage(e.target.value)}><option>Auto</option><option>Español</option><option>English</option><option>Português</option><option>Français</option></select></>}
+ <button className="v-next" onClick={()=>stage===2?finish():setStage(stage+1)} disabled={stage===1&&!name.trim()}>{stage===2?"Crear Vínculo":"Continuar"} →</button></section>:<section className="v-chat-layout"><aside className="v-side"><div className="v-avatar">{profile?.gender==="Hombre"?"♂":profile?.gender==="Otro"?"✧":"♀"}</div><h2>{profile?.name}</h2><p>{profile?.personality}</p><div className="v-side-links"><span>♡ Conversación</span><span>✧ Memorias</span><span>✓ Planes y tareas</span><span>⌕ Investigación</span></div></aside><div className="v-chat"><div className="v-chat-top"><div><b>Conversación</b><small>Tu espacio personal</small></div><span className="v-status">● PROTOTIPO</span></div><div className="v-messages">{messages.map((m,i)=><div className={"v-msg "+m.role} key={i}>{m.text}</div>)}</div><div className="v-compose"><input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()} placeholder="Escribe algo…"/><button onClick={send}>Enviar ↑</button></div><div className="v-memory-box"><h3>Memorias</h3><div className="v-add-memory"><input value={memory} onChange={e=>setMemory(e.target.value)} placeholder="Añadir un recuerdo"/><button onClick={()=>{if(memory.trim()){setMemories([...memories,memory.trim()]);setMemory("")}}}>+</button></div>{memories.map((m,i)=><div className="v-memory" key={i}>{m}<button onClick={()=>setMemories(memories.filter((_,j)=>j!==i))}>×</button></div>)}</div></div></section>}
+ <footer className="v-footer">VÍNCULO · PROTOTIPO · Las respuestas todavía no están conectadas a una IA real ni a búsqueda automática.</footer></main>;
 }

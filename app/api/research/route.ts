@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";\ntype SearchResult = { title?: string; url?: string; content?: string };
+import { NextResponse } from "next/server";
+type SearchResult = { title?: string; url?: string; content?: string };
 export async function POST(req:Request){
  try{const body: unknown = await req.json(); const query = typeof body === "object" && body !== null && "query" in body ? (body as {query?:unknown}).query : undefined; if(typeof query !== "string" || !query.trim()) return NextResponse.json({error:"Escribe un tema."},{status:400}); if(query.length>500) return NextResponse.json({error:"La búsqueda es demasiado larga."},{status:400});
  const key=process.env.TAVILY_API_KEY;if(!key)return NextResponse.json({configured:false,links:[{title:"Google",url:"https://www.google.com/search?q="+encodeURIComponent(query)},{title:"Bing",url:"https://www.bing.com/search?q="+encodeURIComponent(query)}]});

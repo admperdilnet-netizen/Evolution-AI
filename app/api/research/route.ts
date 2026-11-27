@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 export async function POST(req:Request){
  try{const {query}=await req.json();if(!query?.trim())return NextResponse.json({error:"Escribe un tema."},{status:400});
- const key=process.env.TAVILY_API_KEY;if(!key)return NextResponse.json({configured:false,links:[{title:"Buscar en Google",url:"https://www.google.com/search?q="+encodeURIComponent(query)},{title:"Buscar en Bing",url:"https://www.bing.com/search?q="+encodeURIComponent(query)}]});
+ const key=process.env.TAVILY_API_KEY;if(!key)return NextResponse.json({configured:false,links:[{title:"Google",url:"https://www.google.com/search?q="+encodeURIComponent(query)},{title:"Bing",url:"https://www.bing.com/search?q="+encodeURIComponent(query)}]});
  const r=await fetch("https://api.tavily.com/search",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({api_key:key,query,search_depth:"basic",max_results:5})});const d=await r.json();if(!r.ok)return NextResponse.json({error:"Error de búsqueda"},{status:r.status});
- return NextResponse.json({configured:true,results:(d.results||[]).map((x:any)=>({title:x.title,url:x.url,content:x.content}))});
+ const results=(d.results||[]).map((x:any)=>({title:x.title,url:x.url,content:x.content}));
+ let summary="";const ai=process.env.OPENAI_API_KEY;if(ai&&results.length){const sr=await fetch("https://api.openai.com/v1/chat/completions",{method:"POST",headers:{Authorization:"Bearer "+ai,"Content-Type":"application/json"},body:JSON.stringify({model:process.env.VINCULO_MODEL||"gpt-4o-mini",messages:[{role:"system",content:"Resume en español los resultados de búsqueda con claridad. Distingue hechos de incertidumbre, usa exclusivamente la información suministrada y añade una breve lista de fuentes por título y URL."},{role:"user",content:"Tema: "+query+"\n\n"+results.map((x:any)=>x.title+"\n"+x.url+"\n"+x.content).join("\n\n")}]})});const sd=await sr.json();if(sr.ok)summary=sd.choices?.[0]?.message?.content||"";}
+ return NextResponse.json({configured:true,results,summary});
  }catch{return NextResponse.json({error:"No se pudo realizar la búsqueda."},{status:400})}
 }

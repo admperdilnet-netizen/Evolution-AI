@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 type Profile={gender:string;name:string;personality:string;language:string};
-type Message={role:"assistant"|"user";text:string};\ntype ResearchResult={title?:string;url?:string;content?:string};
+type Message={role:"assistant"|"user";text:string};
+type ResearchResult={title?:string;url?:string;content?:string};
 const personalities=["Cariñosa","Romántica","Divertida","Coqueta","Tranquila","Personalizada"];
 export default function Home(){
  const [stage,setStage]=useState(0),[gender,setGender]=useState("Mujer"),[name,setName]=useState(""),[personality,setPersonality]=useState("Cariñosa"),[language,setLanguage]=useState("Auto"),[profile,setProfile]=useState<Profile|null>(null),[messages,setMessages]=useState<Message[]>([]),[input,setInput]=useState(""),[memories,setMemories]=useState<string[]>([]),[memory,setMemory]=useState(""),[tasks,setTasks]=useState<string[]>([]),[task,setTask]=useState(""),[research,setResearch]=useState(""),[busy,setBusy]=useState(false),[researchResults,setResearchResults]=useState<ResearchResult[]>([]),[researchNote,setResearchNote]=useState("");

@@ -136,7 +136,7 @@ async function mergeScenes(scenes: LongScene[], targetSeconds: number, report: (
     await ffmpeg.writeFile("concat-list.txt", new TextEncoder().encode(list.join("\n")));
     report("Uniendo las escenas y su audio en un solo archivo MP4…");
     report("Recortando el video unido a " + targetSeconds + " segundos…");
-    let exitCode = await ffmpeg.exec([
+    const exitCode = await ffmpeg.exec([
       "-f", "concat", "-safe", "0", "-i", "concat-list.txt",
       "-t", String(targetSeconds), "-c:v", "libx264", "-preset", "ultrafast", "-crf", "23",
       "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart", "evolution-final.mp4"

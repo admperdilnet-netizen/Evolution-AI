@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Evolution AI — Tu estudio audiovisual",
-  description: "Explora Evolution AI sin registro ni inicio de sesión."
+  title: "Vínculo — Tu compañía virtual",
+  description: "Configura tu compañía virtual y crea tu espacio en Vínculo."
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

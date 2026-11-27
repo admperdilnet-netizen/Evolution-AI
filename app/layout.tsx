@@ -1,11 +1,1 @@
-import type { Metadata } from "next";
-import "./globals.css";
-
-export const metadata: Metadata = {
-  title: "Evolution AI — Tu estudio audiovisual",
-  description: "Explora Evolution AI sin registro ni inicio de sesión."
-};
-
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="es"><body>{children}</body></html>;
-}
+import type { Metadata } from "next";import "./globals.css";export const metadata:Metadata={title:"Vínculo — Compañía virtual",description:"Una compañera virtual para conversar y compartir."};export default function RootLayout({children}:{children:React.ReactNode}){return <html lang="es"><body>{children}</body></html>}

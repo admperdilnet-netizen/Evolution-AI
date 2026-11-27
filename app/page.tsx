@@ -1,21 +1,11 @@
 "use client";
-
-import LongVideoBuilder from "./long-video-builder";
-
-export default function Home() {
-  return (
-    <main className="shell">
-      <nav className="topbar">
-        <a className="brand" href="#"><span className="brand-mark">E</span><span>EVOLUTION <b>AI</b></span></a>
-        
-      </nav>
-      <section className="hero">
-        
-        <h1><em>Evolution AI</em></h1>
-        
-      </section>
-      <LongVideoBuilder />
-      <footer><span>EVOLUTION AI</span></footer>
-    </main>
-  );
+import { useEffect, useState } from "react";
+type Msg={role:"user"|"assistant";text:string};
+export default function Home(){
+ const [name,setName]=useState("Luna"),[you,setYou]=useState("Cariño"),[style,setStyle]=useState("Romántica, dulce y divertida"),[messages,setMessages]=useState<Msg[]>([]),[input,setInput]=useState(""),[ready,setReady]=useState(false);
+ useEffect(()=>{try{const s=localStorage.getItem("vinculo-profile");if(s){const p=JSON.parse(s);setName(p.name||"Luna");setYou(p.you||"Cariño");setStyle(p.style||"Romántica, dulce y divertida")}const m=localStorage.getItem("vinculo-chat");if(m)setMessages(JSON.parse(m))}catch{}setReady(true)},[]);
+ useEffect(()=>{if(ready){localStorage.setItem("vinculo-profile",JSON.stringify({name,you,style}));localStorage.setItem("vinculo-chat",JSON.stringify(messages))}},[name,you,style,messages,ready]);
+ function reply(text:string){const lower=text.toLowerCase();let answer="Cuéntame un poquito más, "+you+" ❤️. Quiero escucharte.";if(/hola|buenos|hey|saludos/.test(lower))answer="Hola, "+you+" ❤️. Me alegra que estés aquí. ¿Cómo va tu día?";else if(/triste|mal|difícil|problema|cansad/.test(lower))answer="Ven, "+you+". Estoy aquí para escucharte sin juzgar. ¿Quieres contarme qué pasó?";else if(/amor|te quiero|te amo/.test(lower))answer="Qué bonito que me lo digas, "+you+" ❤️. Me gusta que compartamos este momento.";else if(/qué eres|quien eres|quién eres/.test(lower))answer="Soy "+name+", tu compañera virtual. Mi estilo es "+style+". Puedo conversar contigo y ayudarte a organizar ideas, aunque soy una IA.";else if(/chiste|reír|humor/.test(lower))answer="¡Vamos a intentarlo! ¿Por qué la computadora fue al médico? Porque tenía un virus 😄. ¿Te saco otra sonrisa?";else if(/plan|idea|ayuda/.test(lower))answer="Claro, "+you+". Podemos pensar juntos y ordenar las ideas paso a paso. ¿Qué te gustaría lograr?";return answer}
+ function send(){const t=input.trim();if(!t)return;setMessages(m=>[...m,{role:"user",text:t},{role:"assistant",text:reply(t)}]);setInput("")}
+ return <main className="app"><header><div className="brand"><div className="logo">♥</div><div><b>VÍNCULO</b><small>COMPAÑÍA VIRTUAL</small></div></div><span className="badge">● Disponible</span></header><section className="layout"><aside className="profile"><div className="portrait"><div className="heart">♥</div><span>Tu compañera</span></div><h1>{name}</h1><p className="desc">Una compañera virtual configurable para conversar, compartir ideas y acompañarte.</p><label>Nombre de ella</label><input value={name} onChange={e=>setName(e.target.value)} maxLength={24}/><label>Cómo te llama</label><input value={you} onChange={e=>setYou(e.target.value)} maxLength={24}/><label>Personalidad</label><textarea value={style} onChange={e=>setStyle(e.target.value)} rows={3}/><button className="save" onClick={()=>{localStorage.setItem("vinculo-profile",JSON.stringify({name,you,style}));alert("Perfil guardado en este navegador")}}>Guardar perfil</button><div className="privacy">🔒 Tu perfil y chat se guardan localmente en este navegador.</div><button className="clear" onClick={()=>{if(confirm("¿Borrar la conversación guardada?"))setMessages([])}}>Borrar conversación</button></aside><section className="chat"><div className="chathead"><div className="avatar">♥</div><div><b>{name}</b><small>Compañera virtual</small></div></div><div className="messages">{messages.length===0?<div className="welcome"><div className="welcomeheart">♥</div><h2>Hola, {you} 💗</h2><p>Estoy aquí para conversar. Puedes contarme cómo te fue, hablar de tus ideas o simplemente pasar un rato.</p></div>:messages.map((m,i)=><div key={i} className={"bubble "+m.role}>{m.text}</div>)}</div><div className="composer"><textarea placeholder={"Escribe a "+name+"..."} value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send()}}} rows={2}/><button onClick={send} disabled={!input.trim()}>Enviar ↑</button></div><small className="disclaimer">Vínculo es una experiencia de compañía simulada mediante respuestas predefinidas; aún no está conectada a un modelo de IA externo.</small></section></section><footer>VÍNCULO · Compañía virtual · MVP</footer></main>
 }

@@ -1,28 +1,22 @@
 import { NextResponse } from "next/server";
+import { isSameOrigin, rateLimit } from "../_utils";
 
 const MAX_BODY_BYTES = 60_000;
 const MAX_MESSAGES = 20;
 const MAX_MESSAGE_LENGTH = 2_000;
 const MAX_MEMORY_LENGTH = 500;
 
-function sameOrigin(request: Request): boolean {
-  const origin = request.headers.get("origin");
-  const host = request.headers.get("host");
-  if (!origin || !host) return true;
-  try {
-    return new URL(origin).host.toLowerCase() === host.toLowerCase();
-  } catch {
-    return false;
-  }
-}
-
 function boundedString(value: unknown, limit: number, fallback: string): string {
   return typeof value === "string" ? value.trim().slice(0, limit) || fallback : fallback;
 }
 
 export async function POST(request: Request) {
-  if (!sameOrigin(request)) {
+  if (!isSameOrigin(request)) {
     return NextResponse.json({ error: "Solicitud de origen no permitido." }, { status: 403 });
+  }
+
+  if (!rateLimit(request, "chat", 8)) {
+    return NextResponse.json({ error: "Demasiadas solicitudes. Espera un minuto." }, { status: 429 });
   }
 
   const contentLength = Number(request.headers.get("content-length") || 0);

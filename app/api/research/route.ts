@@ -1,18 +1,8 @@
 import { NextResponse } from "next/server";
+import { isSameOrigin, rateLimit } from "../_utils";
 
 type SearchResult = { title?: unknown; url?: unknown; content?: unknown };
 const MAX_BODY_BYTES = 8_000;
-
-function sameOrigin(request: Request): boolean {
-  const origin = request.headers.get("origin");
-  const host = request.headers.get("host");
-  if (!origin || !host) return true;
-  try {
-    return new URL(origin).host.toLowerCase() === host.toLowerCase();
-  } catch {
-    return false;
-  }
-}
 
 function safeUrl(value: unknown): string | undefined {
   if (typeof value !== "string") return undefined;
@@ -25,8 +15,12 @@ function safeUrl(value: unknown): string | undefined {
 }
 
 export async function POST(request: Request) {
-  if (!sameOrigin(request)) {
+  if (!isSameOrigin(request)) {
     return NextResponse.json({ error: "Solicitud de origen no permitido." }, { status: 403 });
+  }
+
+  if (!rateLimit(request, "research", 10)) {
+    return NextResponse.json({ error: "Demasiadas búsquedas. Espera un minuto." }, { status: 429 });
   }
 
   const contentLength = Number(request.headers.get("content-length") || 0);
